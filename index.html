@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Superelvan 2026/2027</title>
+    
+    <!-- FAVICON i CM-Retro stil (SE 26/27) -->
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzAwMDA4MCIvPjx0ZXh0IHg9IjUwIiB5PSI0MCIgZm9udC1mYW1pbHk9IlRhaG9tYSxTYW5zLXNlcmlmIiBmb250LXNpemU9IjM1IiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0iI0ZGRkYwMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+U0U8L3RleHQ+PHRleHQgeD0iNTAiIHk9Ijc1IiBmb250LWZhbWlseT0iVGFob21hLFNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjAiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjRkZGRjAwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIj4yNi8yNzwvdGV4dD48L3N2Zz4=" type="image/svg+xml">
+
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- FIREBASE SDK -->
@@ -159,8 +163,9 @@
                 </div>
             </div>
 
-            <div class="flex-1 p-1 sm:p-2 flex justify-center items-center h-full mt-10 mb-2 font-sans relative">
-                <div class="pitch-bg w-full max-w-sm sm:max-w-md h-full max-h-[85%] rounded shadow-inner flex flex-col justify-between py-1 sm:py-4 px-1 shrink-0">
+            <!-- Fixad layout: Tvingar planen att aldrig bli högre än utrymmet tillåter -->
+            <div class="flex-1 p-1 pt-14 pb-2 sm:p-2 sm:pt-14 flex justify-center items-center min-h-0 font-sans relative">
+                <div class="pitch-bg w-full max-w-sm sm:max-w-md h-full rounded shadow-inner flex flex-col justify-between py-2 sm:py-4 px-1 shrink-0">
                     <div class="pitch-lines">
                         <div class="penalty-box-top"></div>
                         <div class="center-line"></div>
@@ -690,6 +695,8 @@
 
             const timerEl = document.getElementById('countdown-timer');
             const btnCreate = document.getElementById('btn-create-team');
+            
+            const myTeams = JSON.parse(localStorage.getItem('ff_my_teams') || '[]');
 
             if (isCompetitionLocked) {
                 timerEl.classList.add('hidden');
@@ -701,7 +708,15 @@
                 timerEl.innerText = `Deadline: ${d}d ${h}h ${m}m`;
                 timerEl.className = "text-[10px] sm:text-xs text-yellow-400 font-mono bg-black/50 px-2 py-0.5 rounded border border-gray-600 shadow-inner";
                 timerEl.classList.remove('hidden');
-                if(btnCreate) btnCreate.classList.remove('hidden');
+                
+                // Döljer knappen Skapa Lag om man redan har skapat ett lag på denna enhet
+                if(btnCreate) {
+                    if (myTeams.length > 0) {
+                        btnCreate.classList.add('hidden');
+                    } else {
+                        btnCreate.classList.remove('hidden');
+                    }
+                }
             }
         }
         setInterval(updateCountdown, 60000);
@@ -866,9 +881,10 @@
             const isAdmin = localStorage.getItem('ff_admin_auth') === 'true';
             const canEdit = isAdmin || myTeams.includes(comp.id);
 
+            // Ändrat texten från "Ändra lag" till "Genomför spelarbyten"
             document.getElementById('pitch-team-formation').innerHTML = `
                 ${comp.formation || '4-3-3'}
-                ${canEdit ? `<button id="btn-edit-team" onclick="editTeam('${comp.id}')" class="ml-2 text-[10px] bg-blue-600 hover:bg-blue-500 text-white px-1.5 py-0.5 rounded shadow pointer-events-auto ${isCompetitionLocked ? 'hidden' : ''}">Ändra lag</button>` : ''}
+                ${canEdit ? `<button id="btn-edit-team" onclick="editTeam('${comp.id}')" class="ml-2 text-[10px] bg-blue-600 hover:bg-blue-500 text-white px-1.5 py-0.5 rounded shadow pointer-events-auto ${isCompetitionLocked ? 'hidden' : ''}">Genomför spelarbyten</button>` : ''}
             `;
 
             const latestRound = getLatestLockedRound();
@@ -1077,7 +1093,7 @@
             document.getElementById('new-team-name').value = nameVal;
             
             document.getElementById('create-error-msg').innerText = '';
-            document.getElementById('modal-title-create').innerText = 'Ändra lag';
+            document.getElementById('modal-title-create').innerText = 'Genomför spelarbyten';
             
             renderCreateTeamLists();
             m.classList.remove('hidden');
@@ -1171,12 +1187,12 @@
             
             saveToCloud(); 
             document.getElementById('create-modal').classList.add('hidden');
-            
+            updateCountdown(); // Döljer Skapa Lag-knappen direkt när man har sparat
             renderLeaderboard(); 
             if(currentSelectedTeam) renderPitch(currentSelectedTeam);
         }
 
-        // NY ADMINFUNKTION: Byta namn på Deltagare
+        // ADMINFUNKTION: Byta namn på Deltagare
         window.editTeamNameAdmin = function(tid) {
             const comp = COMPETITORS.find(c => c.id === tid);
             if(!comp) return;
@@ -1190,7 +1206,7 @@
             }
         };
 
-        // NY ADMINFUNKTION: Ta bort Deltagare
+        // ADMINFUNKTION: Ta bort Deltagare
         window.deleteTeamAdmin = function(tid, teamName) {
             if(confirm(`Är du säker på att du vill ta bort "${teamName}" helt från tävlingen?\n\nJa = OK / Nej = Avbryt`)) {
                 COMPETITORS = COMPETITORS.filter(c => c.id !== tid);
@@ -1202,6 +1218,7 @@
 
                 saveToCloud();
                 buildAdminUI();
+                updateCountdown(); // Visar Skapa Lag-knappen igen ifall det var ens eget lag man raderade
                 renderLeaderboard();
                 
                 if(currentSelectedTeam) {
@@ -1407,7 +1424,7 @@
                 `;
             });
 
-            // DELTAGARE (Ny flik)
+            // DELTAGARE
             const dBody = document.getElementById('admin-deltagare-tbody');
             dBody.innerHTML = '';
             if (COMPETITORS.length === 0) dBody.innerHTML = '<tr><td colspan="2" class="p-4 text-center">Inga deltagare ännu.</td></tr>';
