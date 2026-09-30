@@ -55,7 +55,6 @@
             );
             border: 2px solid rgba(255, 255, 255, 0.8);
             position: relative;
-            /* Overflow hidden borttaget så tooltips kan synas fritt över kanten */
         }
         .pitch-lines {
             position: absolute; inset: 6px;
@@ -382,10 +381,11 @@
                     </button>
                 </div>
                 
-                <!-- Sub Flikar Lag/Spelare -->
-                <div class="bg-gray-700 p-1 flex justify-center gap-4 shrink-0 border-b border-gray-600">
-                    <button id="sub-tab-lag" onclick="switchAdminSubTab('lag')" class="px-6 py-1 text-xs font-bold rounded bg-gray-800 text-white shadow border border-gray-500">Lag</button>
-                    <button id="sub-tab-spelare" onclick="switchAdminSubTab('spelare')" class="px-6 py-1 text-xs font-bold rounded text-gray-300 hover:bg-gray-600">Spelare</button>
+                <!-- Sub Flikar Lag/Spelare/Deltagare -->
+                <div class="bg-gray-700 p-1 flex justify-center gap-2 sm:gap-4 shrink-0 border-b border-gray-600">
+                    <button id="sub-tab-lag" onclick="switchAdminSubTab('lag')" class="px-4 sm:px-6 py-1 text-xs font-bold rounded bg-gray-800 text-white shadow border border-gray-500">Lag</button>
+                    <button id="sub-tab-spelare" onclick="switchAdminSubTab('spelare')" class="px-4 sm:px-6 py-1 text-xs font-bold rounded text-gray-300 hover:bg-gray-600">Spelare</button>
+                    <button id="sub-tab-deltagare" onclick="switchAdminSubTab('deltagare')" class="px-4 sm:px-6 py-1 text-xs font-bold rounded text-gray-300 hover:bg-gray-600">Deltagare</button>
                 </div>
 
                 <div class="flex-1 overflow-y-auto p-2 sm:p-4 bg-gray-900/50 relative">
@@ -398,17 +398,16 @@
                     </div>
 
                     <!-- Lag Vy -->
-                    <div id="admin-view-lag" class="flex flex-col gap-2 max-w-3xl mx-auto">
+                    <div id="admin-view-lag" class="flex flex-col gap-2 max-w-3xl mx-auto w-full">
                         <div class="bg-gray-800 rounded border border-gray-700 overflow-hidden shadow overflow-x-auto">
                             <table class="w-full text-left text-xs whitespace-nowrap">
                                 <thead class="bg-gray-900 text-[10px] text-purple-400 uppercase font-bold border-b border-gray-700">
                                     <tr>
                                         <th class="p-2">Valda Lag</th>
-                                        <th class="p-2 text-center w-12" title="Ligapoäng">L.P</th>
-                                        <th class="p-2 text-center w-12" title="Gjorda Mål">Gj.M</th>
-                                        <th class="p-2 text-center w-12" title="Insläppta Mål">In.M</th>
-                                        <th class="p-2 text-center w-12" title="Titlar">Titlar</th>
-                                        <th class="p-2 text-center w-12">Action</th>
+                                        <th class="p-2 text-center w-14" title="Ligapoäng">L.P</th>
+                                        <th class="p-2 text-center w-14" title="Gjorda Mål">Gj.M</th>
+                                        <th class="p-2 text-center w-14" title="Insläppta Mål">In.M</th>
+                                        <th class="p-2 text-center w-14" title="Titlar">Titlar</th>
                                     </tr>
                                 </thead>
                                 <tbody id="admin-teams-tbody" class="divide-y divide-gray-700">
@@ -424,6 +423,24 @@
                             <!-- Fylls med spelarkort -->
                         </div>
                     </div>
+
+                    <!-- Deltagare Vy -->
+                    <div id="admin-view-deltagare" class="hidden flex-col gap-2 max-w-3xl mx-auto w-full">
+                        <div class="bg-gray-800 rounded border border-gray-700 overflow-hidden shadow overflow-x-auto">
+                            <table class="w-full text-left text-xs whitespace-nowrap">
+                                <thead class="bg-gray-900 text-[10px] text-purple-400 uppercase font-bold border-b border-gray-700">
+                                    <tr>
+                                        <th class="p-2">Deltagare / Lagnamn</th>
+                                        <th class="p-2 text-center w-24">Åtgärd</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-deltagare-tbody" class="divide-y divide-gray-700">
+                                    <!-- Fylls med deltagare -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
@@ -805,7 +822,6 @@
                 const isMyTeam = myTeams.includes(comp.id);
                 
                 const tr = document.createElement('tr');
-                // Tydlig markering av eget lag i poängställningen
                 tr.className = `cursor-pointer transition-colors ${isSelected ? 'border-l-4 border-l-green-400' : 'border-l-4 border-l-transparent'} ${isMyTeam ? 'bg-[#000050] outline outline-2 outline-[#FFFF00]' : 'hover:bg-gray-800'}`;
                 tr.onclick = () => { currentSelectedTeam = comp.id; renderLeaderboard(); renderPitch(comp.id); };
 
@@ -871,7 +887,6 @@
                 const ptsGoals = roundDec(rawGoals * 2);
                 const ptsAssists = roundDec(rawAssists * 1);
                 
-                // Forwards och mittfältare öppnas nedåt, backar och målvakt uppåt, för att alltid stanna inom skärmen
                 const tooltipPosClass = (p.pos === 'FWD' || p.pos === 'MID') ? 'top-full mt-2' : 'bottom-full mb-2';
 
                 const div = document.createElement('div');
@@ -992,7 +1007,6 @@
             const { players, teams } = getActiveEntities();
             const latestRound = getLatestLockedRound();
             
-            // Hämta vilka spelare som tillhör användaren för att markera dem
             const myTeams = JSON.parse(localStorage.getItem('ff_my_teams') || '[]');
             let myPlayerIds = new Set();
             COMPETITORS.forEach(c => { if(myTeams.includes(c.id)) c.squad.forEach(pid => myPlayerIds.add(pid)); });
@@ -1014,7 +1028,6 @@
                 const isMyPlayer = myPlayerIds.has(p.id);
                 const tr = document.createElement('tr');
                 
-                // Diskret CM-markering rakt över egna spelare i statistiken
                 tr.className = `cursor-pointer stats-player-row transition ${isMyPlayer ? 'bg-[#000050] border-l-4 border-[#FFFF00]' : 'hover:bg-gray-700/50'}`;
                 tr.onclick = (e) => openStatsPlayerDetails(e, p.id, p.name, p.pos, p.team, p.tG, p.tA, p.tPts);
                 tr.innerHTML = `
@@ -1163,11 +1176,11 @@
             if(currentSelectedTeam) renderPitch(currentSelectedTeam);
         }
 
-        // NY ADMINFUNKTION: Byta namn på lag
+        // NY ADMINFUNKTION: Byta namn på Deltagare
         window.editTeamNameAdmin = function(tid) {
             const comp = COMPETITORS.find(c => c.id === tid);
             if(!comp) return;
-            const newName = prompt("Ändra namn på laget:", comp.name);
+            const newName = prompt("Ändra namn på deltagarens lag:", comp.name);
             if(newName && newName.trim() !== "") {
                 comp.name = newName.trim();
                 saveToCloud();
@@ -1177,9 +1190,9 @@
             }
         };
 
-        // NY ADMINFUNKTION: Ta bort lag helt
-        window.deleteTeamAdmin = function(tid) {
-            if(confirm("Är du säker på att du vill ta bort detta lag helt?")) {
+        // NY ADMINFUNKTION: Ta bort Deltagare
+        window.deleteTeamAdmin = function(tid, teamName) {
+            if(confirm(`Är du säker på att du vill ta bort "${teamName}" helt från tävlingen?\n\nJa = OK / Nej = Avbryt`)) {
                 COMPETITORS = COMPETITORS.filter(c => c.id !== tid);
                 if(currentSelectedTeam === tid) currentSelectedTeam = COMPETITORS.length > 0 ? COMPETITORS[0].id : null;
                 
@@ -1321,19 +1334,21 @@
                 btn.innerHTML = label + lockMark + filledMark;
             });
 
-            const btnLag = document.getElementById('sub-tab-lag'), btnSpelare = document.getElementById('sub-tab-spelare');
-            const viewLag = document.getElementById('admin-view-lag'), viewSpelare = document.getElementById('admin-view-spelare');
+            const btnLag = document.getElementById('sub-tab-lag'), btnSpelare = document.getElementById('sub-tab-spelare'), btnDeltagare = document.getElementById('sub-tab-deltagare');
+            const viewLag = document.getElementById('admin-view-lag'), viewSpelare = document.getElementById('admin-view-spelare'), viewDeltagare = document.getElementById('admin-view-deltagare');
+
+            [btnLag, btnSpelare, btnDeltagare].forEach(b => b.className = 'px-4 sm:px-6 py-1 text-xs font-bold rounded text-gray-300 hover:bg-gray-600');
+            [viewLag, viewSpelare, viewDeltagare].forEach(v => { v.classList.add('hidden'); v.classList.remove('flex'); });
 
             if(currentAdminSubTab === 'lag') {
-                btnLag.className = 'px-6 py-1 text-xs font-bold rounded bg-gray-800 text-white shadow border border-gray-500';
-                btnSpelare.className = 'px-6 py-1 text-xs font-bold rounded text-gray-300 hover:bg-gray-600';
+                btnLag.className = 'px-4 sm:px-6 py-1 text-xs font-bold rounded bg-gray-800 text-white shadow border border-gray-500';
                 viewLag.classList.remove('hidden'); viewLag.classList.add('flex');
-                viewSpelare.classList.add('hidden'); viewSpelare.classList.remove('flex');
-            } else {
-                btnSpelare.className = 'px-6 py-1 text-xs font-bold rounded bg-gray-800 text-white shadow border border-gray-500';
-                btnLag.className = 'px-6 py-1 text-xs font-bold rounded text-gray-300 hover:bg-gray-600';
+            } else if(currentAdminSubTab === 'spelare') {
+                btnSpelare.className = 'px-4 sm:px-6 py-1 text-xs font-bold rounded bg-gray-800 text-white shadow border border-gray-500';
                 viewSpelare.classList.remove('hidden'); viewSpelare.classList.add('flex');
-                viewLag.classList.add('hidden'); viewLag.classList.remove('flex');
+            } else {
+                btnDeltagare.className = 'px-4 sm:px-6 py-1 text-xs font-bold rounded bg-gray-800 text-white shadow border border-gray-500';
+                viewDeltagare.classList.remove('hidden'); viewDeltagare.classList.add('flex');
             }
 
             const { players, teams } = getActiveEntities();
@@ -1351,9 +1366,10 @@
                 btnLock.className = 'ml-4 shrink-0 bg-red-600/20 text-red-400 border border-red-500 px-3 py-1.5 rounded text-xs font-bold hover:bg-red-600/40 transition font-sans';
             }
 
+            // LAG
             const tBody = document.getElementById('admin-teams-tbody');
             tBody.innerHTML = '';
-            if (teams.length === 0) tBody.innerHTML = '<tr><td colspan="6" class="p-4 text-center">Inga lag valda.</td></tr>';
+            if (teams.length === 0) tBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Inga lag valda.</td></tr>';
             
             teams.sort((a,b) => a.name.localeCompare(b.name)).forEach(t => {
                 const s = statsState.teams[t.id][currentAdminRoundId];
@@ -1367,14 +1383,11 @@
                         <td class="p-1 text-center w-12 sm:w-14"><input type="number" id="adm_t_${t.id}_gf" value="${s.gf}" class="w-full bg-gray-900 border border-gray-600 rounded p-1 text-center text-xs text-white focus:border-blue-500" ${isLocked?'disabled':''}></td>
                         <td class="p-1 text-center w-12 sm:w-14"><input type="number" id="adm_t_${t.id}_ga" value="${s.ga}" class="w-full bg-gray-900 border border-gray-600 rounded p-1 text-center text-xs text-white focus:border-blue-500" ${isLocked?'disabled':''}></td>
                         <td class="p-1 text-center w-12 sm:w-14"><input type="number" id="adm_t_${t.id}_ti" value="${s.titles}" class="w-full bg-gray-900 border border-yellow-600/50 rounded p-1 text-center text-xs text-yellow-100 focus:border-yellow-500" ${isLocked?'disabled':''}></td>
-                        <td class="p-1 text-center w-12 sm:w-14 whitespace-nowrap">
-                            <button onclick="editTeamNameAdmin('${t.id}')" class="text-blue-400 hover:text-blue-200 px-1" title="Ändra namn">✏️</button>
-                            <button onclick="deleteTeamAdmin('${t.id}')" class="text-red-500 hover:text-red-300 px-1" title="Ta bort lag helt">🗑️</button>
-                        </td>
                     </tr>
                 `;
             });
 
+            // SPELARE
             const pGrid = document.getElementById('admin-players-grid');
             pGrid.innerHTML = '';
             if (players.length === 0) pGrid.innerHTML = '<div class="p-4 text-center col-span-full">Inga spelare valda.</div>';
@@ -1391,6 +1404,22 @@
                             <div class="flex flex-col items-center"><span class="text-[7px] text-gray-400 mb-0.5">Ass</span><input type="number" id="adm_p_${p.id}_a" value="${s.assists}" class="w-8 sm:w-9 bg-gray-900 border border-gray-600 rounded p-0.5 text-center text-[10px] sm:text-xs text-white focus:border-green-500" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" ${isLocked?'disabled':''}></div>
                         </div>
                     </div>
+                `;
+            });
+
+            // DELTAGARE (Ny flik)
+            const dBody = document.getElementById('admin-deltagare-tbody');
+            dBody.innerHTML = '';
+            if (COMPETITORS.length === 0) dBody.innerHTML = '<tr><td colspan="2" class="p-4 text-center">Inga deltagare ännu.</td></tr>';
+            COMPETITORS.forEach(comp => {
+                dBody.innerHTML += `
+                    <tr class="hover:bg-gray-700/50">
+                        <td class="p-2 font-bold">${comp.name}</td>
+                        <td class="p-2 text-center whitespace-nowrap">
+                            <button onclick="editTeamNameAdmin('${comp.id}')" class="text-blue-400 hover:text-blue-200 px-2" title="Ändra namn">✏️</button>
+                            <button onclick="deleteTeamAdmin('${comp.id}', '${comp.name.replace(/'/g, "\\'")}')" class="text-red-500 hover:text-red-300 px-2" title="Ta bort deltagare">🗑️</button>
+                        </td>
+                    </tr>
                 `;
             });
         }
