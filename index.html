@@ -709,7 +709,6 @@
                 timerEl.className = "text-[10px] sm:text-xs text-yellow-400 font-mono bg-black/50 px-2 py-0.5 rounded border border-gray-600 shadow-inner";
                 timerEl.classList.remove('hidden');
                 
-                // Döljer knappen Skapa Lag om man redan har skapat ett lag på denna enhet
                 if(btnCreate) {
                     if (myTeams.length > 0) {
                         btnCreate.classList.add('hidden');
@@ -881,7 +880,6 @@
             const isAdmin = localStorage.getItem('ff_admin_auth') === 'true';
             const canEdit = isAdmin || myTeams.includes(comp.id);
 
-            // Ändrat texten från "Ändra lag" till "Genomför spelarbyten"
             document.getElementById('pitch-team-formation').innerHTML = `
                 ${comp.formation || '4-3-3'}
                 ${canEdit ? `<button id="btn-edit-team" onclick="editTeam('${comp.id}')" class="ml-2 text-[10px] bg-blue-600 hover:bg-blue-500 text-white px-1.5 py-0.5 rounded shadow pointer-events-auto ${isCompetitionLocked ? 'hidden' : ''}">Genomför spelarbyten</button>` : ''}
@@ -1187,7 +1185,7 @@
             
             saveToCloud(); 
             document.getElementById('create-modal').classList.add('hidden');
-            updateCountdown(); // Döljer Skapa Lag-knappen direkt när man har sparat
+            updateCountdown(); 
             renderLeaderboard(); 
             if(currentSelectedTeam) renderPitch(currentSelectedTeam);
         }
@@ -1218,7 +1216,7 @@
 
                 saveToCloud();
                 buildAdminUI();
-                updateCountdown(); // Visar Skapa Lag-knappen igen ifall det var ens eget lag man raderade
+                updateCountdown(); 
                 renderLeaderboard();
                 
                 if(currentSelectedTeam) {
