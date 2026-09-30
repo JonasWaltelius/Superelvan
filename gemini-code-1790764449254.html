@@ -1,0 +1,1415 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Superelvan 2026/2027</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FIREBASE SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        body { -webkit-tap-highlight-color: transparent; }
+        
+        /* CM 01/02 Custom Styles */
+        .cm-bg-nav { background-color: #000080; }
+        .cm-text-yellow { color: #FFFF00; }
+        .cm-font { font-family: Tahoma, Arial, sans-serif; }
+        .cm-border { border: 1px solid #4169E1; }
+        .cm-btn {
+            background-color: #000080;
+            color: #FFFF00;
+            border-top: 1px solid #4169E1;
+            border-left: 1px solid #4169E1;
+            border-bottom: 1px solid #000040;
+            border-right: 1px solid #000040;
+            font-family: Tahoma, Arial, sans-serif;
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.8);
+            transition: all 0.1s;
+        }
+        .cm-btn:hover { background-color: #0000cd; }
+        .cm-btn:active {
+            border-top: 1px solid #000040;
+            border-left: 1px solid #000040;
+            border-bottom: 1px solid #4169E1;
+            border-right: 1px solid #4169E1;
+        }
+        .cm-active-tab {
+            background-color: #FFFF00;
+            color: #000080;
+            border-top: 1px solid #ffffff;
+            border-left: 1px solid #ffffff;
+            border-bottom: 1px solid #b8b800;
+            border-right: 1px solid #b8b800;
+            font-weight: bold;
+            text-shadow: none;
+        }
+
+        .pitch-bg {
+            background-color: #166534;
+            background-image: repeating-linear-gradient(
+                0deg, transparent, transparent 40px,
+                rgba(255,255,255,0.05) 40px, rgba(255,255,255,0.05) 80px
+            );
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            position: relative;
+            overflow: hidden;
+        }
+        .pitch-lines {
+            position: absolute; inset: 6px;
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            pointer-events: none;
+        }
+        .center-circle {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 70px; height: 70px;
+            border: 2px solid rgba(255, 255, 255, 0.6); border-radius: 50%;
+        }
+        .center-line {
+            position: absolute; top: 50%; left: 0; right: 0;
+            height: 2px; background: rgba(255, 255, 255, 0.6);
+        }
+        .penalty-box-top {
+            position: absolute; top: 0; left: 22%; right: 22%;
+            height: 15%; border: 2px solid rgba(255, 255, 255, 0.6); border-top: none;
+        }
+        .penalty-box-bottom {
+            position: absolute; bottom: 0; left: 22%; right: 22%;
+            height: 15%; border: 2px solid rgba(255, 255, 255, 0.6); border-bottom: none;
+        }
+        
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: #1f2937; }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 2px; }
+        .selected-player { border-color: #4ade80 !important; background-color: rgba(74, 222, 128, 0.1) !important; }
+        .disabled-player { opacity: 0.4; pointer-events: none; filter: grayscale(100%); }
+        .radio-custom:checked + div { border-color: #4ade80; background-color: rgba(74, 222, 128, 0.1); color: #4ade80; }
+        
+        .jersey-abbr { text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
+        .tooltip-container { z-index: 50; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-200 font-sans h-screen flex flex-col overflow-hidden text-sm cm-font">
+
+    <!-- Header (CM 01/02 Style) -->
+    <header class="cm-bg-nav p-2 sm:p-3 flex flex-row justify-between items-center border-b-2 border-gray-900 shrink-0 z-20 gap-2 shadow-lg">
+        <h1 class="text-lg sm:text-2xl font-bold cm-text-yellow flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-4 tracking-wide" style="text-shadow: 2px 2px 0 #000;">
+            Superelvan 2026/2027
+            <span id="countdown-timer" class="text-[10px] sm:text-xs text-white font-mono bg-black/50 px-2 py-0.5 rounded border border-gray-600 shadow-inner"></span>
+        </h1>
+        <div class="flex gap-1 sm:gap-2 flex-wrap justify-end">
+            <button id="btn-create-team" onclick="toggleCreateTeam()" class="cm-btn px-2 py-1 sm:px-3 sm:py-1.5 rounded font-bold shadow text-xs sm:text-sm">
+                + Skapa lag
+            </button>
+            <button onclick="toggleInfo()" class="cm-btn px-2 py-1 sm:px-3 sm:py-1.5 rounded font-bold shadow text-xs sm:text-sm">
+                Information
+            </button>
+            <button onclick="toggleRules()" class="cm-btn px-2 py-1 sm:px-3 sm:py-1.5 rounded font-bold shadow text-xs sm:text-sm">
+                Poängsystem
+            </button>
+            <button onclick="toggleStats()" class="cm-btn px-2 py-1 sm:px-3 sm:py-1.5 rounded font-bold shadow text-xs sm:text-sm">
+                Statistik
+            </button>
+            <button onclick="handleAdminClick()" class="cm-btn px-2 py-1 sm:px-3 sm:py-1.5 rounded font-bold shadow text-xs sm:text-sm">
+                Admin
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col lg:flex-row p-2 gap-2 h-[calc(100vh-60px)] overflow-hidden">
+        
+        <!-- Vänster/Topp: Leaderboard -->
+        <div class="lg:w-1/2 bg-gray-800 rounded shadow flex flex-col border border-gray-700 overflow-hidden shrink-0 lg:shrink h-[40%] lg:h-full">
+            <div class="p-2 border-b border-gray-700 cm-bg-nav shrink-0 flex justify-between items-center">
+                <h2 class="text-sm font-bold cm-text-yellow uppercase tracking-wider">Poängställning</h2>
+            </div>
+            
+            <div class="flex-1 overflow-x-auto overflow-y-auto">
+                <table class="w-full text-left whitespace-nowrap text-[10px] sm:text-sm font-sans">
+                    <thead>
+                        <tr class="text-gray-400 border-b border-gray-700 uppercase bg-gray-900/50 sticky top-0 z-10">
+                            <th class="p-2 font-semibold">Deltagare</th>
+                            <th class="p-1 sm:p-2 font-semibold text-center">R10</th>
+                            <th class="p-1 sm:p-2 font-semibold text-center">R20</th>
+                            <th class="p-1 sm:p-2 font-semibold text-center">R30</th>
+                            <th class="p-1 sm:p-2 font-semibold text-center">Slut</th>
+                            <th class="p-1 sm:p-2 font-bold text-center text-green-400">Totalt</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard-body" class="divide-y divide-gray-700/50">
+                        <!-- Genereras dynamiskt -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Höger/Botten: Fotbollsplan -->
+        <div class="lg:w-1/2 bg-gray-800 rounded shadow border border-gray-700 flex flex-col relative overflow-hidden h-[60%] lg:h-full">
+            <div class="absolute top-2 left-2 right-2 z-20 pointer-events-none flex justify-between items-start gap-1.5 font-sans">
+                <div class="bg-black/80 px-2 py-1 rounded shadow border border-gray-600 flex items-center pointer-events-auto">
+                    <h2 id="pitch-team-name" class="text-sm font-bold text-white">Laddar...</h2>
+                    <span id="pitch-team-formation" class="text-[10px] text-gray-400 ml-1 font-mono"></span>
+                </div>
+                <div id="pitch-round-status" class="bg-blue-900/80 px-2 py-1 rounded shadow border border-blue-700 text-blue-200 text-xs font-bold">
+                    Inför Omgång 10
+                </div>
+            </div>
+
+            <div class="flex-1 p-2 flex justify-center items-center overflow-y-auto h-full mt-4 font-sans">
+                <div class="pitch-bg w-full max-w-lg aspect-[2/3] max-h-full rounded shadow-inner flex flex-col justify-between py-2 sm:py-6 px-1 shrink-0">
+                    <div class="pitch-lines">
+                        <div class="penalty-box-top"></div>
+                        <div class="center-line"></div>
+                        <div class="center-circle"></div>
+                        <div class="penalty-box-bottom"></div>
+                    </div>
+                    <!-- Spelarzomer -->
+                    <div id="row-fwd" class="flex justify-evenly w-full z-10 mt-2"></div>
+                    <div id="row-mid" class="flex justify-evenly w-full z-10"></div>
+                    <div id="row-def" class="flex justify-evenly w-full z-10"></div>
+                    <div id="row-gk" class="flex justify-center w-full z-10 mb-2"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Rules Modal -->
+    <div id="rules-modal" class="fixed inset-0 bg-black/90 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-gray-800 w-full max-w-2xl rounded shadow-2xl flex flex-col border border-gray-600 max-h-full overflow-hidden">
+            <div class="p-3 border-b border-gray-700 flex justify-between items-center shrink-0 cm-bg-nav">
+                <h2 class="text-base font-bold cm-text-yellow uppercase">Poängsystem</h2>
+                <button onclick="toggleRules()" class="text-gray-400 hover:text-white text-lg font-sans">&times;</button>
+            </div>
+            <div class="p-4 space-y-3 text-gray-300 text-xs overflow-y-auto flex-1 font-sans">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <h3 class="font-bold text-green-400 mb-1 border-b border-gray-700 pb-1">Individuellt (Alla spelare)</h3>
+                        <ul class="list-disc list-inside"><li>Mål: 2 poäng</li><li>Assist: 1 poäng</li></ul>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-purple-400 mb-1 border-b border-gray-700 pb-1">Lagpoäng & Titlar (Alla valda)</h3>
+                        <ul class="list-disc list-inside">
+                            <li>Lagets Ligapoäng: Dividerat på 4</li>
+                            <li>Vunnen Titel: 20 poäng</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <h3 class="font-bold text-yellow-400 mb-1 border-b border-gray-700 pb-1">Bonus: Gjorda mål gäller ALLA positioner</h3>
+                    <p class="mb-1 text-[10px] text-gray-400">Poäng baserat på lagets totala gjorda mål:</p>
+                    <div class="grid grid-cols-3 gap-x-2 gap-y-1 text-[10px] font-mono bg-gray-900 p-2 rounded border border-gray-700">
+                        <div>80+ mål: <span class="text-green-400">20 p</span></div> 
+                        <div>56-61 mål: <span class="text-green-400">16 p</span></div>
+                        <div>32-37 mål: <span class="text-green-400">12 p</span></div>
+                        <div>74-79 mål: <span class="text-green-400">19 p</span></div> 
+                        <div>50-55 mål: <span class="text-green-400">15 p</span></div>
+                        <div>26-31 mål: <span class="text-green-400">11 p</span></div>
+                        <div>68-73 mål: <span class="text-green-400">18 p</span></div> 
+                        <div>44-49 mål: <span class="text-green-400">14 p</span></div>
+                        <div>20-25 mål: <span class="text-green-400">10 p</span></div>
+                        <div>62-67 mål: <span class="text-green-400">17 p</span></div> 
+                        <div>38-43 mål: <span class="text-green-400">13 p</span></div>
+                        <div>&le; 19 mål: <span class="text-green-400">9 p</span></div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="font-bold text-blue-400 mb-1 border-b border-gray-700 pb-1">Bonus: Insläppta mål (Endast DEF & GK)</h3>
+                    <p class="mb-1 text-[10px] text-gray-400">Poäng baserat på lagets totala insläppta mål:</p>
+                    <div class="grid grid-cols-3 gap-x-2 gap-y-1 text-[10px] font-mono bg-gray-900 p-2 rounded border border-gray-700">
+                        <div>&le; 30 mål: <span class="text-green-400">20 p</span></div> 
+                        <div>46-50 mål: <span class="text-green-400">16 p</span></div>
+                        <div>66-70 mål: <span class="text-green-400">12 p</span></div>
+                        <div>31-35 mål: <span class="text-green-400">19 p</span></div> 
+                        <div>51-55 mål: <span class="text-green-400">15 p</span></div>
+                        <div>71-75 mål: <span class="text-green-400">11 p</span></div>
+                        <div>36-40 mål: <span class="text-green-400">18 p</span></div> 
+                        <div>56-60 mål: <span class="text-green-400">14 p</span></div>
+                        <div>76-80 mål: <span class="text-green-400">10 p</span></div>
+                        <div>41-45 mål: <span class="text-green-400">17 p</span></div> 
+                        <div>61-65 mål: <span class="text-green-400">13 p</span></div>
+                        <div>&gt; 80 mål: <span class="text-green-400">9 p</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="p-2 border-t border-gray-700 cm-bg-nav flex justify-end shrink-0">
+                <button onclick="toggleRules()" class="cm-btn px-4 py-1.5 rounded text-xs">Stäng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info Modal -->
+    <div id="info-modal" class="fixed inset-0 bg-black/90 hidden z-[55] flex items-center justify-center p-4 font-sans">
+        <div class="bg-gray-800 w-full max-w-md rounded shadow-2xl flex flex-col border border-gray-600 max-h-full overflow-hidden">
+            <div class="p-3 border-b border-gray-700 flex justify-between items-center shrink-0 cm-bg-nav cm-font">
+                <h2 class="text-base font-bold cm-text-yellow uppercase">Superelvan 2026/2027</h2>
+                <button onclick="toggleInfo()" class="text-gray-400 hover:text-white text-lg">&times;</button>
+            </div>
+            <div class="p-4 space-y-4 text-gray-300 text-sm overflow-y-auto flex-1">
+                <p><strong>Vad du ska göra:</strong> Ta ut ditt lag utifrån två taktiska varianter (4-3-3 eller 3-4-3).</p>
+                <p><strong>Samla poäng:</strong> Utifrån poängsystemet. Alla poäng räknas samman vid fyra specifika tillfällen per säsong (Omg 10, 20, 30 och Slutställning).</p>
+                <p class="text-yellow-400 font-bold border-l-4 border-yellow-400 pl-2">Viktig regel: Allt baseras ENBART på den egna inhemska ligan (mål, titlar osv.).</p>
+                <div>
+                    <h3 class="font-bold text-white mb-2 border-b border-gray-700 pb-1">Medverkande Ligor & Lag</h3>
+                    <ul class="space-y-1 text-xs">
+                        <li><strong class="text-blue-300">Premier League:</strong> Arsenal, Man City, Chelsea, Liverpool</li>
+                        <li><strong class="text-red-300">La Liga:</strong> Barcelona, Real Madrid, Atletico Madrid</li>
+                        <li><strong class="text-blue-500">Ligue 1:</strong> Paris SG</li>
+                        <li><strong class="text-red-500">Bundesliga:</strong> Bayern München</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="p-2 border-t border-gray-700 flex justify-end shrink-0 cm-bg-nav cm-font">
+                <button onclick="toggleInfo()" class="cm-btn px-4 py-1.5 rounded text-xs font-bold">Förstått</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Modal -->
+    <div id="stats-modal" class="fixed inset-0 bg-black/95 hidden z-[52] flex items-center justify-center p-2 sm:p-4">
+        <div class="bg-gray-800 w-full max-w-3xl h-[90vh] rounded shadow-2xl flex flex-col border border-gray-600 overflow-hidden relative">
+            <div class="p-2 sm:p-3 border-b border-gray-700 flex justify-between items-center cm-bg-nav shrink-0">
+                <h2 class="text-sm sm:text-base font-bold cm-text-yellow uppercase">📊 Statistik & Topplistor</h2>
+                <button onclick="toggleStats()" class="text-gray-400 hover:text-white text-xl ml-2 font-bold font-sans">&times;</button>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto p-2 sm:p-4 flex flex-col gap-4 bg-gray-900/50 font-sans relative" id="stats-scroll-area">
+                
+                <!-- Klickbar spelardetalj (dyker upp ovanpå) -->
+                <div id="stats-player-details" class="absolute hidden bg-[#000080] border border-[#FFFF00] p-3 shadow-2xl z-[60] text-white text-xs w-64 rounded shadow-black/50 cm-font">
+                    <div class="flex justify-between items-center border-b border-[#FFFF00] pb-1 mb-2">
+                        <h4 id="spd-name" class="cm-text-yellow font-bold uppercase tracking-wider">Namn</h4>
+                        <button onclick="closeStatsPlayerDetails()" class="text-gray-300 hover:text-white">&times;</button>
+                    </div>
+                    <div class="space-y-1 font-sans">
+                        <div class="flex justify-between"><span>Mål (<span id="spd-g-count">0</span>):</span> <span id="spd-g-pts" class="text-green-400 font-mono">0p</span></div>
+                        <div class="flex justify-between"><span>Assist (<span id="spd-a-count">0</span>):</span> <span id="spd-a-pts" class="text-green-400 font-mono">0p</span></div>
+                        <div class="flex justify-between text-blue-300 mt-1 border-t border-gray-600 pt-1"><span>Lagpoäng & Titlar:</span> <span id="spd-l-pts" class="font-mono">0p</span></div>
+                        <div class="flex justify-between text-purple-300"><span>Lagbonus (Gj.M):</span> <span id="spd-gf-pts" class="font-mono">0p</span></div>
+                        <div class="flex justify-between text-yellow-300" id="spd-ga-row"><span>Lagbonus (In.M):</span> <span id="spd-ga-pts" class="font-mono">0p</span></div>
+                        <div class="flex justify-between font-bold border-t border-gray-400 mt-2 pt-1 text-[13px]"><span>Totalt:</span> <span id="spd-tot-pts" class="cm-text-yellow font-mono">0p</span></div>
+                    </div>
+                </div>
+
+                <!-- Lag Statistik -->
+                <div>
+                    <h3 class="font-bold text-white mb-2 text-xs border-b border-gray-700 pb-1">Valda Lag (Sorterade på Ligapoäng)</h3>
+                    <div class="overflow-x-auto bg-gray-800 rounded border border-gray-700 shadow">
+                        <table class="w-full text-left text-[10px] sm:text-xs whitespace-nowrap">
+                            <thead class="bg-gray-900 text-gray-400 uppercase font-bold border-b border-gray-700">
+                                <tr>
+                                    <th class="p-1.5">Lag</th>
+                                    <th class="p-1.5 text-center">Gjorda Mål</th>
+                                    <th class="p-1.5 text-center">Insläppta Mål</th>
+                                    <th class="p-1.5 text-center">Ligapoäng</th>
+                                    <th class="p-1.5 text-center">Titlar</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stats-teams-tbody" class="divide-y divide-gray-700/50">
+                                <!-- Genereras dynamiskt -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Spelare Topplista -->
+                <div class="pb-32">
+                    <h3 class="font-bold text-white mb-2 text-xs border-b border-gray-700 pb-1">Valda Spelare <span class="text-gray-400 font-normal">(Klicka på en spelare för detaljer)</span></h3>
+                    <div class="overflow-x-auto bg-gray-800 rounded border border-gray-700 shadow">
+                        <table class="w-full text-left text-[10px] sm:text-xs whitespace-nowrap">
+                            <thead class="bg-gray-900 text-gray-400 uppercase font-bold border-b border-gray-700">
+                                <tr>
+                                    <th class="p-1.5">Namn</th>
+                                    <th class="p-1.5">Pos</th>
+                                    <th class="p-1.5">Lag</th>
+                                    <th class="p-1.5 text-center text-green-400">Totalt</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stats-players-tbody" class="divide-y divide-gray-700/50">
+                                <!-- Genereras dynamiskt -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+            </div>
+            
+            <div class="p-2 border-t border-gray-700 cm-bg-nav flex justify-end shrink-0 cm-font">
+                <button onclick="toggleStats()" class="cm-btn px-4 py-1.5 rounded text-xs font-bold transition">Stäng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Modal -->
+    <div id="admin-modal" class="fixed inset-0 bg-black/95 hidden z-50 flex items-center justify-center p-1 sm:p-4">
+        <div class="bg-gray-800 w-full max-w-5xl h-[98vh] sm:h-[95vh] rounded shadow-2xl flex flex-col border border-gray-600 relative overflow-hidden">
+            
+            <div class="p-2 sm:p-3 border-b-2 border-gray-900 flex justify-between items-center cm-bg-nav shrink-0">
+                <h2 class="text-sm sm:text-base font-bold cm-text-yellow mr-4 tracking-wider uppercase">Admin Panel</h2>
+                
+                <div class="flex-1 flex gap-2 overflow-x-auto hide-scrollbar">
+                    <button id="main-tab-results" onclick="switchMainAdminTab('results')" class="cm-btn cm-active-tab px-4 py-1.5 text-xs rounded transition whitespace-nowrap">
+                        Poäng & Resultat
+                    </button>
+                    <button id="main-tab-test" onclick="switchMainAdminTab('test')" class="cm-btn px-4 py-1.5 text-xs rounded transition whitespace-nowrap">
+                        Testavdelning
+                    </button>
+                    <button id="btn-admin-lock" onclick="toggleCompetitionLock()" class="px-4 py-1.5 text-xs font-bold rounded bg-red-600 text-white border border-red-800 transition whitespace-nowrap hidden sm:block font-sans">
+                        Lås tävlingen
+                    </button>
+                </div>
+                
+                <button onclick="toggleAdmin()" class="text-gray-400 hover:text-white text-xl ml-2 font-bold font-sans">&times;</button>
+            </div>
+            
+            <div id="admin-results-area" class="flex-1 flex flex-col overflow-hidden font-sans">
+                <!-- Omgång Flikar -->
+                <div class="bg-gray-800 p-2 border-b border-gray-700 shrink-0 flex items-center justify-between overflow-x-auto hide-scrollbar">
+                    <div class="flex gap-1 bg-gray-900 rounded p-1 border border-gray-700 shrink-0">
+                        <button id="tab-r10" onclick="switchAdminRoundTab('r10')" class="px-3 py-1 text-xs font-bold rounded bg-blue-600 text-white shadow">Omgång 10</button>
+                        <button id="tab-r20" onclick="switchAdminRoundTab('r20')" class="px-3 py-1 text-xs font-bold rounded text-gray-400 hover:bg-gray-700">Omgång 20</button>
+                        <button id="tab-r30" onclick="switchAdminRoundTab('r30')" class="px-3 py-1 text-xs font-bold rounded text-gray-400 hover:bg-gray-700">Omgång 30</button>
+                        <button id="tab-slut" onclick="switchAdminRoundTab('slut')" class="px-3 py-1 text-xs font-bold rounded text-gray-400 hover:bg-gray-700">Slutställning</button>
+                    </div>
+                    <button id="btn-lock-round" onclick="toggleRoundLock()" class="ml-4 shrink-0 bg-red-600/20 text-red-400 border border-red-500 px-3 py-1.5 rounded text-xs font-bold hover:bg-red-600/40 transition">
+                        Lås omgång
+                    </button>
+                </div>
+                
+                <!-- Sub Flikar Lag/Spelare -->
+                <div class="bg-gray-700 p-1 flex justify-center gap-4 shrink-0 border-b border-gray-600">
+                    <button id="sub-tab-lag" onclick="switchAdminSubTab('lag')" class="px-6 py-1 text-xs font-bold rounded bg-gray-800 text-white shadow border border-gray-500">Lag</button>
+                    <button id="sub-tab-spelare" onclick="switchAdminSubTab('spelare')" class="px-6 py-1 text-xs font-bold rounded text-gray-300 hover:bg-gray-600">Spelare</button>
+                </div>
+
+                <div class="flex-1 overflow-y-auto p-2 sm:p-4 bg-gray-900/50 relative">
+                    <div id="lock-overlay" class="absolute inset-0 bg-gray-900/80 z-20 hidden flex-col items-center justify-center backdrop-blur-sm">
+                        <span class="text-4xl mb-2">🔒</span>
+                        <h3 class="text-white font-bold text-lg mb-4">Omgången är låst</h3>
+                        <button onclick="toggleRoundLock()" class="bg-gray-700 border border-gray-500 px-4 py-2 rounded text-sm font-bold text-white hover:bg-gray-600 shadow-lg">
+                            Lås upp omgång
+                        </button>
+                    </div>
+
+                    <!-- Lag Vy -->
+                    <div id="admin-view-lag" class="flex flex-col gap-2 max-w-3xl mx-auto">
+                        <div class="bg-gray-800 rounded border border-gray-700 overflow-hidden shadow overflow-x-auto">
+                            <table class="w-full text-left text-xs whitespace-nowrap">
+                                <thead class="bg-gray-900 text-[10px] text-purple-400 uppercase font-bold border-b border-gray-700">
+                                    <tr>
+                                        <th class="p-2">Valda Lag</th>
+                                        <th class="p-2 text-center w-14" title="Ligapoäng">L.P</th>
+                                        <th class="p-2 text-center w-14" title="Gjorda Mål">Gj.M</th>
+                                        <th class="p-2 text-center w-14" title="Insläppta Mål">In.M</th>
+                                        <th class="p-2 text-center w-14" title="Titlar">Titlar</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-teams-tbody" class="divide-y divide-gray-700">
+                                    <!-- Fylls med lag -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Spelare Vy -->
+                    <div id="admin-view-spelare" class="hidden flex-col gap-2">
+                        <div id="admin-players-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-1 sm:gap-1.5">
+                            <!-- Fylls med spelarkort -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="admin-test-area" class="hidden flex-1 flex flex-col bg-gray-900/80 p-6 items-center justify-start gap-6 font-sans">
+                <!-- Test area content -->
+                <div class="text-center max-w-lg mb-4">
+                    <h3 class="text-xl font-bold text-yellow-400 mb-2">⚙️ Testavdelning</h3>
+                    <p class="text-gray-400 text-sm">Fyll systemet med fiktiv data för den omgång som senast var aktiv i fliken "Poäng & Resultat".</p>
+                </div>
+                
+                <div class="w-full max-w-md space-y-4">
+                    <button onclick="simulateRound()" class="w-full bg-purple-600 hover:bg-purple-500 text-white px-4 py-3 rounded text-sm font-bold shadow transition flex items-center justify-center gap-2">
+                        <span>🎲</span> Simulera poäng för aktuell omgång
+                    </button>
+                    <button onclick="resetRound()" class="w-full bg-gray-600 hover:bg-gray-500 text-white px-4 py-3 rounded text-sm font-bold shadow transition flex items-center justify-center gap-2">
+                        <span>🔄</span> Återställ aktuell omgång till noll
+                    </button>
+                    <hr class="border-gray-700 my-4">
+                    <button onclick="addFictionalUser()" class="w-full bg-teal-600 hover:bg-teal-500 text-white px-4 py-3 rounded text-sm font-bold shadow transition flex items-center justify-center gap-2">
+                        <span>🤖</span> Lägg till fiktiv deltagare i spelet
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-2 sm:p-3 border-t-2 border-gray-900 cm-bg-nav flex justify-end gap-2 shrink-0 z-10 cm-font">
+                <button onclick="toggleAdmin()" class="cm-btn px-4 py-1.5 rounded text-xs font-bold">Avbryt</button>
+                <button onclick="saveAdminData()" class="cm-btn bg-blue-600 text-white px-6 py-1.5 rounded font-bold text-xs shadow-lg" style="background-color: #008000; border-color: #00FF00;">
+                    Spara resultat
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Message Modal -->
+    <div id="msg-modal" class="fixed inset-0 bg-black/90 hidden z-[60] flex items-center justify-center p-4">
+        <div class="bg-gray-800 w-full max-w-xs rounded shadow-2xl flex flex-col border border-gray-600">
+            <div class="p-4 text-center"><p id="msg-text" class="text-white text-sm font-bold font-sans"></p></div>
+            <div class="p-2 border-t border-gray-700 flex justify-center cm-bg-nav cm-font">
+                <button onclick="document.getElementById('msg-modal').classList.add('hidden')" class="cm-btn px-6 py-1.5 rounded text-xs font-bold">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="login-modal" class="fixed inset-0 bg-black/90 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-gray-800 w-full max-w-xs rounded shadow-2xl flex flex-col border border-gray-600">
+            <div class="p-3 border-b border-gray-700 flex justify-between items-center cm-bg-nav cm-font">
+                <h2 class="text-base font-bold cm-text-yellow uppercase">Admin Inloggning</h2>
+                <button onclick="toggleLogin()" class="text-gray-400 hover:text-white text-lg font-sans">&times;</button>
+            </div>
+            <div class="p-4 flex flex-col gap-3 font-sans">
+                <input type="password" id="admin-pwd" placeholder="Lösenord" class="w-full bg-gray-900 border border-gray-600 rounded p-2 text-white focus:border-red-500 focus:outline-none text-sm">
+                <label class="text-xs text-gray-400 flex items-center gap-2 mt-1 cursor-pointer">
+                    <input type="checkbox" id="save-pwd-check" class="rounded border-gray-600 bg-gray-900 text-red-500 focus:ring-red-500">
+                    Spara lösenord
+                </label>
+                <span id="login-error" class="text-red-500 text-xs hidden">Fel lösenord!</span>
+            </div>
+            <div class="p-3 border-t border-gray-700 flex justify-end gap-2 cm-bg-nav cm-font">
+                <button onclick="toggleLogin()" class="cm-btn px-3 py-1.5 rounded text-xs">Avbryt</button>
+                <button onclick="checkLogin()" class="cm-btn px-3 py-1.5 rounded text-xs font-bold" style="background-color: #800000; border-color: #FF0000;">Logga in</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Team Modal -->
+    <div id="create-modal" class="fixed inset-0 bg-black/95 hidden z-50 flex items-center justify-center p-1 sm:p-4">
+        <div class="bg-gray-800 w-full max-w-3xl h-[98vh] sm:h-[90vh] rounded flex flex-col border border-gray-600 overflow-hidden shadow-2xl">
+            <div class="p-2 border-b border-gray-700 flex justify-between items-center cm-bg-nav shrink-0 cm-font">
+                <h2 id="modal-title-create" class="text-lg font-bold cm-text-yellow uppercase">Skapa lag</h2>
+                <button onclick="toggleCreateTeam()" class="text-gray-400 hover:text-white text-xl font-sans">&times;</button>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto p-2 sm:p-4 flex flex-col gap-3 bg-gray-900/50 font-sans">
+                <div class="bg-gray-900/90 p-2 rounded border border-gray-700 flex flex-col sm:flex-row gap-3 sticky top-0 z-10 shadow">
+                    <div class="flex-1 flex flex-col gap-2">
+                        <input type="text" id="new-team-name" placeholder="Ditt förnamn" class="w-full bg-gray-800 border border-gray-600 rounded p-1.5 text-white focus:outline-none focus:border-green-500 text-xs">
+                        <div class="flex gap-2">
+                            <label class="cursor-pointer flex-1">
+                                <input type="radio" name="formation" value="4-3-3" class="hidden radio-custom" checked onchange="handleFormationChange()">
+                                <div class="text-center py-1 border border-gray-600 rounded text-gray-400 text-xs font-bold transition">4-3-3</div>
+                            </label>
+                            <label class="cursor-pointer flex-1">
+                                <input type="radio" name="formation" value="3-4-3" class="hidden radio-custom" onchange="handleFormationChange()">
+                                <div class="text-center py-1 border border-gray-600 rounded text-gray-400 text-xs font-bold transition">3-4-3</div>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1 grid grid-cols-4 gap-1 text-center shrink-0">
+                        <div class="bg-gray-800 p-1 rounded border border-gray-700 flex flex-col justify-center">
+                            <span class="text-[9px] text-yellow-400 uppercase">Målvakt</span><span id="count-gk" class="text-xs font-bold">0/1</span>
+                        </div>
+                        <div class="bg-gray-800 p-1 rounded border border-gray-700 flex flex-col justify-center">
+                            <span class="text-[9px] text-blue-400 uppercase">Backar</span><span id="count-def" class="text-xs font-bold">0/4</span>
+                        </div>
+                        <div class="bg-gray-800 p-1 rounded border border-gray-700 flex flex-col justify-center">
+                            <span class="text-[9px] text-green-400 uppercase">Mittfältare</span><span id="count-mid" class="text-xs font-bold">0/3</span>
+                        </div>
+                        <div class="bg-gray-800 p-1 rounded border border-gray-700 flex flex-col justify-center">
+                            <span class="text-[9px] text-red-400 uppercase">Forwards</span><span id="count-fwd" class="text-xs font-bold">0/3</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <div><h3 class="text-xs font-bold text-yellow-400 mb-1 border-b border-gray-700">Målvakter</h3><div id="list-gk" class="grid grid-cols-2 sm:grid-cols-3 gap-1"></div></div>
+                    <div><h3 class="text-xs font-bold text-blue-400 mb-1 border-b border-gray-700">Backar</h3><div id="list-def" class="grid grid-cols-2 sm:grid-cols-3 gap-1"></div></div>
+                    <div><h3 class="text-xs font-bold text-green-400 mb-1 border-b border-gray-700">Mittfältare</h3><div id="list-mid" class="grid grid-cols-2 sm:grid-cols-3 gap-1"></div></div>
+                    <div><h3 class="text-xs font-bold text-red-400 mb-1 border-b border-gray-700">Forwards</h3><div id="list-fwd" class="grid grid-cols-2 sm:grid-cols-3 gap-1"></div></div>
+                </div>
+            </div>
+
+            <div class="p-2 border-t border-gray-700 cm-bg-nav flex justify-between items-center shrink-0 cm-font">
+                <span id="create-error-msg" class="text-[#FF4040] text-[10px] sm:text-xs font-bold truncate pr-2" style="text-shadow: 1px 1px 0 #000;"></span>
+                <div class="flex gap-1 sm:gap-2 shrink-0">
+                    <button onclick="toggleCreateTeam()" class="cm-btn px-2 py-1.5 rounded text-xs">Avbryt</button>
+                    <button id="btn-save-new-team" onclick="saveNewTeam()" class="cm-btn px-3 py-1.5 rounded text-xs font-bold opacity-50 cursor-not-allowed" style="background-color: #008000; border-color: #00FF00;" disabled>
+                        Spara (<span id="selection-count-total">0</span>/11)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HUVUDLOGIK -->
+    <script>
+        // INITIERA FIREBASE
+        const firebaseConfig = {
+            apiKey: "AIzaSyDJIKQ3hHd7aTCXm5jQilorqDTf9N5sRaY",
+            authDomain: "superelvan.firebaseapp.com",
+            projectId: "superelvan",
+            storageBucket: "superelvan.firebasestorage.app",
+            messagingSenderId: "613708749854",
+            appId: "1:613708749854:web:d43560577740b39218a20f"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // SPARA TILL MOLNET (Denna funktion ersätter nu all localStorage för datan)
+        function saveToCloud() {
+            db.collection("superelvan").doc("globalState").set({
+                competitors: COMPETITORS,
+                stats: statsState,
+                locks: roundLocks,
+                compLocked: adminCompLocked
+            }).catch(e => console.error("Cloud Error:", e));
+        }
+
+        // Variabler
+        function showMsg(text) {
+            document.getElementById('msg-text').innerText = text;
+            document.getElementById('msg-modal').classList.remove('hidden');
+        }
+
+        const getJerseySvg = (teamId, classes) => {
+            let defs = '', fill = '#fff', extras = '', textFill = '#fff', stroke = '#1f2937';
+            switch(teamId) {
+                case 'ARS': fill = '#ef4444'; extras = `<path d="M28,10 L5,28 L18,50 L25,45 Z" fill="#ffffff" stroke="${stroke}" stroke-width="1.5"/><path d="M72,10 L95,28 L82,50 L75,45 Z" fill="#ffffff" stroke="${stroke}" stroke-width="1.5"/>`; break;
+                case 'MCI': fill = '#60a5fa'; textFill = '#000'; break;
+                case 'CHE': fill = '#2563eb'; break;
+                case 'LIV': fill = '#dc2626'; break;
+                case 'BAR': defs = `<pattern id="bar-stripe" width="20" height="100" patternUnits="userSpaceOnUse"><rect width="10" height="100" fill="#a50044"/><rect x="10" width="10" height="100" fill="#004d98"/></pattern>`; fill = 'url(#bar-stripe)'; textFill = '#fbbf24'; break;
+                case 'RMA': fill = '#ffffff'; textFill = '#000'; break;
+                case 'ATM': defs = `<pattern id="atm-stripe" width="20" height="100" patternUnits="userSpaceOnUse"><rect width="10" height="100" fill="#ef4444"/><rect x="10" width="10" height="100" fill="#ffffff"/></pattern>`; fill = 'url(#atm-stripe)'; textFill = '#000'; break;
+                case 'PSG': fill = '#1e3a8a'; extras = `<rect x="42" y="10" width="16" height="80" fill="#ef4444" />`; break;
+                case 'BAY': fill = '#dc2626'; break;
+            }
+            return `<div class="relative ${classes} flex flex-col items-center justify-center"><svg viewBox="0 0 100 100" class="absolute inset-0 w-full h-full drop-shadow-lg pointer-events-none"><defs>${defs}</defs><path d="M28,10 Q50,20 72,10 L95,28 L82,50 L75,45 L75,90 L25,90 L25,45 L18,50 L5,28 Z" fill="${fill}" stroke="${stroke}" stroke-width="3" stroke-linejoin="round"/>${extras}<text x="50%" y="58%" dominant-baseline="middle" text-anchor="middle" fill="${textFill}" font-size="24" font-weight="900" font-family="Arial, sans-serif" class="${textFill==='#fff'?'jersey-abbr':''}">${teamId}</text></svg></div>`;
+        };
+
+        const getStaticShirtSvg = (classes, teamId) => {
+            let fill = '#cbd5e1';
+            if(teamId) {
+                if(['ARS','LIV','BAY','ATM'].includes(teamId)) fill='#ef4444';
+                else if(teamId==='MCI') fill='#60a5fa';
+                else if(['CHE','PSG','BAR'].includes(teamId)) fill='#2563eb';
+                else if(teamId==='RMA') fill='#ffffff';
+            }
+            return `<svg viewBox="0 0 100 100" class="${classes} drop-shadow-md"><path d="M28,10 Q50,20 72,10 L95,28 L82,50 L75,45 L75,90 L25,90 L25,45 L18,50 L5,28 Z" fill="${fill}" stroke="#1f2937" stroke-width="3" stroke-linejoin="round"/></svg>`;
+        };
+
+        const FORMATIONS = { '4-3-3': { 'GK': 1, 'DEF': 4, 'MID': 3, 'FWD': 3 }, '3-4-3': { 'GK': 1, 'DEF': 3, 'MID': 4, 'FWD': 3 } };
+        let currentCreationFormation = '4-3-3';
+        const TEAMS = {
+            'ARS': { name: 'Arsenal' }, 'MCI': { name: 'Man City' }, 'CHE': { name: 'Chelsea' }, 
+            'LIV': { name: 'Liverpool' }, 'BAR': { name: 'Barcelona' }, 'RMA': { name: 'Real Madrid' }, 
+            'ATM': { name: 'Atletico Madrid' }, 'PSG': { name: 'Paris SG' }, 'BAY': { name: 'Bayern München' }
+        };
+        const PLAYERS = {
+            'p_a1': { name: 'Raya', team: 'ARS', pos: 'GK' }, 'p_a2': { name: 'Gabriel', team: 'ARS', pos: 'DEF' }, 'p_a3': { name: 'Saliba', team: 'ARS', pos: 'DEF' }, 'p_a4': { name: 'Calafiori', team: 'ARS', pos: 'DEF' },
+            'p_a5': { name: 'Ødegaard', team: 'ARS', pos: 'MID' }, 'p_a6': { name: 'Rice', team: 'ARS', pos: 'MID' }, 'p_a7': { name: 'Tzolis', team: 'ARS', pos: 'MID' },
+            'p_a8': { name: 'Saka', team: 'ARS', pos: 'FWD' }, 'p_a9': { name: 'Havertz', team: 'ARS', pos: 'FWD' }, 'p_a10': { name: 'Gyökeres', team: 'ARS', pos: 'FWD' },
+            'p_m1': { name: 'Donnarumma', team: 'MCI', pos: 'GK' }, 'p_m2': { name: 'Gvardiol', team: 'MCI', pos: 'DEF' }, 'p_m3': { name: 'Dias', team: 'MCI', pos: 'DEF' }, 'p_m4': { name: 'Guehi', team: 'MCI', pos: 'DEF' },
+            'p_m5': { name: 'Foden', team: 'MCI', pos: 'MID' }, 'p_m6': { name: 'Cherki', team: 'MCI', pos: 'MID' }, 'p_m7': { name: 'Doku', team: 'MCI', pos: 'MID' }, 'p_m8': { name: 'Fernandez', team: 'MCI', pos: 'MID' }, 'p_m9': { name: 'Anderson', team: 'MCI', pos: 'MID' },
+            'p_m10': { name: 'Haaland', team: 'MCI', pos: 'FWD' }, 'p_m11': { name: 'Semenyo', team: 'MCI', pos: 'FWD' },
+            'p_c1': { name: 'Martinez', team: 'CHE', pos: 'GK' }, 'p_c2': { name: 'James', team: 'CHE', pos: 'DEF' }, 'p_c3': { name: 'Fofana', team: 'CHE', pos: 'DEF' },
+            'p_c4': { name: 'Palmer', team: 'CHE', pos: 'MID' }, 'p_c5': { name: 'Neto', team: 'CHE', pos: 'MID' }, 'p_c6': { name: 'Rogers', team: 'CHE', pos: 'MID' }, 'p_c7': { name: 'Pedro', team: 'CHE', pos: 'FWD' },
+            'p_l1': { name: 'Allison', team: 'LIV', pos: 'GK' }, 'p_l2': { name: 'Van Dijk', team: 'LIV', pos: 'DEF' }, 'p_l3': { name: 'Jacquet', team: 'LIV', pos: 'DEF' }, 'p_l4': { name: 'Kerkez', team: 'LIV', pos: 'DEF' },
+            'p_l5': { name: 'Szoboszlai', team: 'LIV', pos: 'MID' }, 'p_l6': { name: 'MacAllister', team: 'LIV', pos: 'MID' }, 'p_l7': { name: 'Wirtz', team: 'LIV', pos: 'MID' },
+            'p_l8': { name: 'Isak', team: 'LIV', pos: 'FWD' }, 'p_l9': { name: 'Barcola', team: 'LIV', pos: 'FWD' }, 'p_l10': { name: 'Gakpo', team: 'LIV', pos: 'FWD' },
+            'p_b1': { name: 'Garcia', team: 'BAR', pos: 'GK' }, 'p_b2': { name: 'Kounde', team: 'BAR', pos: 'DEF' }, 'p_b3': { name: 'Cancelo', team: 'BAR', pos: 'DEF' }, 'p_b4': { name: 'Cubarsi', team: 'BAR', pos: 'DEF' },
+            'p_b5': { name: 'Fermin Lopez', team: 'BAR', pos: 'MID' }, 'p_b6': { name: 'Pedri', team: 'BAR', pos: 'MID' }, 'p_b7': { name: 'Rodri', team: 'BAR', pos: 'MID' },
+            'p_b8': { name: 'Yamal', team: 'BAR', pos: 'FWD' }, 'p_b9': { name: 'Raphinha', team: 'BAR', pos: 'FWD' },
+            'p_r1': { name: 'Courtois', team: 'RMA', pos: 'GK' }, 'p_r2': { name: 'Cucurella', team: 'RMA', pos: 'DEF' }, 'p_r3': { name: 'Dumfries', team: 'RMA', pos: 'DEF' }, 'p_r4': { name: 'Huijsen', team: 'RMA', pos: 'DEF' },
+            'p_r5': { name: 'Bellingham', team: 'RMA', pos: 'MID' }, 'p_r6': { name: 'Valverde', team: 'RMA', pos: 'MID' },
+            'p_r7': { name: 'Mbappé', team: 'RMA', pos: 'FWD' }, 'p_r8': { name: 'Vinicius Jr', team: 'RMA', pos: 'FWD' },
+            'p_t1': { name: 'Oblak', team: 'ATM', pos: 'GK' }, 'p_t2': { name: 'Grimaldo', team: 'ATM', pos: 'DEF' }, 'p_t3': { name: 'Llorente', team: 'ATM', pos: 'DEF' },
+            'p_t4': { name: 'Baena', team: 'ATM', pos: 'MID' }, 'p_t5': { name: 'Alvarez', team: 'ATM', pos: 'FWD' }, 'p_t6': { name: 'David', team: 'ATM', pos: 'FWD' },
+            'p_p1': { name: 'Safonov', team: 'PSG', pos: 'GK' }, 'p_p2': { name: 'Mendes', team: 'PSG', pos: 'DEF' }, 'p_p3': { name: 'Hakimi', team: 'PSG', pos: 'DEF' }, 'p_p4': { name: 'Marquinhos', team: 'PSG', pos: 'DEF' },
+            'p_p5': { name: 'Vitinha', team: 'PSG', pos: 'MID' }, 'p_p6': { name: 'Neves', team: 'PSG', pos: 'MID' },
+            'p_p7': { name: 'Dembélé', team: 'PSG', pos: 'FWD' }, 'p_p8': { name: 'Kvaratskhelia', team: 'PSG', pos: 'FWD' }, 'p_p9': { name: 'Torres', team: 'PSG', pos: 'FWD' }, 'p_p10': { name: 'Doué', team: 'PSG', pos: 'FWD' },
+            'p_y1': { name: 'Neuer', team: 'BAY', pos: 'GK' }, 'p_y2': { name: 'Davies', team: 'BAY', pos: 'DEF' }, 'p_y3': { name: 'Upamecano', team: 'BAY', pos: 'DEF' }, 'p_y4': { name: 'Brown', team: 'BAY', pos: 'DEF' }, 'p_y5': { name: 'Tah', team: 'BAY', pos: 'DEF' },
+            'p_y6': { name: 'Kimmich', team: 'BAY', pos: 'MID' }, 'p_y7': { name: 'Musiala', team: 'BAY', pos: 'MID' }, 'p_y8': { name: 'Olise', team: 'BAY', pos: 'MID' },
+            'p_y9': { name: 'Kane', team: 'BAY', pos: 'FWD' }, 'p_y10': { name: 'Diaz', team: 'BAY', pos: 'FWD' }
+        };
+
+        const ROUNDS = ['r10', 'r20', 'r30', 'slut'];
+        
+        // Våra globala databärare
+        let COMPETITORS = [];
+        let statsState = { teams: {}, players: {} };
+        let roundLocks = { r10: false, r20: false, r30: false, slut: false };
+        let adminCompLocked = false;
+        
+        let currentSelectedTeam = null;
+        let currentAdminMainTab = 'results';
+        let currentAdminRoundId = 'r10';
+        let currentAdminSubTab = 'lag'; 
+        let newSquadSelection = [];
+        let isCompetitionLocked = false;
+        let editingTeamId = null;
+
+        function getLatestLockedRound() {
+            if (roundLocks.slut) return 'slut';
+            if (roundLocks.r30) return 'r30';
+            if (roundLocks.r20) return 'r20';
+            if (roundLocks.r10) return 'r10';
+            return null;
+        }
+
+        function updateCountdown() {
+            const DEADLINE = new Date('2026-10-10T13:30:00+02:00').getTime();
+            const now = new Date().getTime();
+            const distance = DEADLINE - now;
+            
+            isCompetitionLocked = adminCompLocked || distance < 0;
+
+            const timerEl = document.getElementById('countdown-timer');
+            const btnCreate = document.getElementById('btn-create-team');
+
+            if (isCompetitionLocked) {
+                timerEl.classList.add('hidden');
+                if(btnCreate) btnCreate.classList.add('hidden');
+            } else {
+                const d = Math.floor(distance / (1000 * 60 * 60 * 24));
+                const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                timerEl.innerText = `Deadline: ${d}d ${h}h ${m}m`;
+                timerEl.className = "text-[10px] sm:text-xs text-yellow-400 font-mono bg-black/50 px-2 py-0.5 rounded border border-gray-600 shadow-inner";
+                timerEl.classList.remove('hidden');
+                if(btnCreate) btnCreate.classList.remove('hidden');
+            }
+        }
+        setInterval(updateCountdown, 60000);
+        
+        function toggleCompetitionLock() {
+            adminCompLocked = !adminCompLocked;
+            saveToCloud();
+            updateAdminLockBtn();
+            updateCountdown();
+            if(currentSelectedTeam) renderPitch(currentSelectedTeam);
+        }
+
+        function updateAdminLockBtn() {
+            const btn = document.getElementById('btn-admin-lock');
+            if(btn) {
+                if(adminCompLocked) {
+                    btn.innerText = 'Lås upp tävlingen';
+                    btn.className = 'cm-btn px-4 py-1.5 text-xs font-bold rounded transition whitespace-nowrap hidden sm:block';
+                } else {
+                    btn.innerText = 'Lås tävlingen';
+                    btn.className = 'cm-btn px-4 py-1.5 text-xs font-bold rounded transition whitespace-nowrap hidden sm:block';
+                    btn.style.backgroundColor = '#800000'; btn.style.borderColor = '#FF0000';
+                }
+            }
+        }
+
+        // HÄR LÄSER VI IN FRÅN MOLNET ISTÄLLET FÖR LOCALSTORAGE
+        function initializeData() {
+            // Skapa tomt ramverk för säkerhets skull
+            Object.keys(TEAMS).forEach(t => { 
+                if(!statsState.teams[t]) statsState.teams[t] = { r10: {lp:0, gf:0, ga:0, titles:0}, r20: {lp:0, gf:0, ga:0, titles:0}, r30: {lp:0, gf:0, ga:0, titles:0}, slut: {lp:0, gf:0, ga:0, titles:0} }; 
+            });
+            Object.keys(PLAYERS).forEach(p => { 
+                if(!statsState.players[p]) statsState.players[p] = { r10: {goals:0, assists:0}, r20: {goals:0, assists:0}, r30: {goals:0, assists:0}, slut: {goals:0, assists:0} }; 
+            });
+
+            // Lyssna på Firebase i realtid!
+            db.collection("superelvan").doc("globalState").onSnapshot(doc => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    if (data.competitors) COMPETITORS = data.competitors;
+                    if (data.stats) statsState = data.stats;
+                    if (data.locks) roundLocks = data.locks;
+                    if (data.compLocked !== undefined) adminCompLocked = data.compLocked;
+
+                    // Säkerställ ramverket igen ifall ny spelare lagts till
+                    Object.keys(TEAMS).forEach(t => { if(!statsState.teams[t]) statsState.teams[t] = { r10: {lp:0, gf:0, ga:0, titles:0}, r20: {lp:0, gf:0, ga:0, titles:0}, r30: {lp:0, gf:0, ga:0, titles:0}, slut: {lp:0, gf:0, ga:0, titles:0} }; });
+                    Object.keys(PLAYERS).forEach(p => { if(!statsState.players[p]) statsState.players[p] = { r10: {goals:0, assists:0}, r20: {goals:0, assists:0}, r30: {goals:0, assists:0}, slut: {goals:0, assists:0} }; });
+
+                    // Uppdatera skärmen med den nya datan
+                    updateAdminLockBtn();
+                    updateCountdown();
+                    renderLeaderboard();
+                    if(currentSelectedTeam) renderPitch(currentSelectedTeam);
+                    if(currentAdminMainTab === 'results') buildAdminUI();
+                }
+            });
+        }
+        
+        const roundDec = (num) => Math.round(num * 10) / 10;
+        
+        const getGfPts = (gf) => {
+            if(gf>=80) return 20; if(gf>=74) return 19; if(gf>=68) return 18; if(gf>=62) return 17;
+            if(gf>=56) return 16; if(gf>=50) return 15; if(gf>=44) return 14; if(gf>=38) return 13;
+            if(gf>=32) return 12; if(gf>=26) return 11; if(gf>=20) return 10;
+            return 9;
+        };
+        const getGaPts = (ga) => {
+            if(ga<=30) return 20; if(ga<=35) return 19; if(ga<=40) return 18; if(ga<=45) return 17;
+            if(ga<=50) return 16; if(ga<=55) return 15; if(ga<=60) return 14; if(ga<=65) return 13;
+            if(ga<=70) return 12; if(ga<=75) return 11; if(ga<=80) return 10;
+            return 9;
+        };
+
+        const calcIndPts = (pid, rId) => {
+            if (!roundLocks[rId]) return 0;
+            return (statsState.players[pid][rId].goals * 2) + (statsState.players[pid][rId].assists * 1);
+        };
+        
+        const calcTeamPts = (tid, rId, pos) => {
+            if (!roundLocks[rId]) return 0;
+            const t = statsState.teams[tid][rId];
+            let pts = (t.lp / 4) + (t.titles * 20);
+            
+            pts += getGfPts(t.gf);
+            
+            if (pos === 'DEF' || pos === 'GK') pts += getGaPts(t.ga);
+            
+            return pts;
+        };
+
+        function getCompScores(comp) {
+            let scores = { r10: 0, r20: 0, r30: 0, slut: 0, total: 0 };
+            const latestRound = getLatestLockedRound();
+            
+            comp.squad.forEach(pid => { 
+                const pos = PLAYERS[pid].pos;
+                ROUNDS.forEach(r => {
+                    if (roundLocks[r]) {
+                        scores[r] += calcIndPts(pid, r) + calcTeamPts(PLAYERS[pid].team, r, pos);
+                    }
+                }); 
+            });
+            ROUNDS.forEach(r => scores[r] = roundDec(scores[r]));
+            scores.total = latestRound ? scores[latestRound] : 0;
+            return scores;
+        }
+
+        function renderLeaderboard() {
+            const tbody = document.getElementById('leaderboard-body');
+            tbody.innerHTML = '';
+            if (COMPETITORS.length === 0) return tbody.innerHTML = `<tr><td colspan="6" class="text-center p-4 text-gray-500">Inga lag skapade ännu.</td></tr>`;
+
+            const sorted = [...COMPETITORS].sort((a, b) => getCompScores(b).total - getCompScores(a).total);
+            if(!currentSelectedTeam && sorted.length > 0) currentSelectedTeam = sorted[0].id;
+
+            sorted.forEach(comp => {
+                const s = getCompScores(comp);
+                const isSelected = currentSelectedTeam === comp.id;
+                const tr = document.createElement('tr');
+                tr.className = `cursor-pointer transition-colors ${isSelected ? 'bg-gray-700/80 border-l-4 border-l-green-400' : 'hover:bg-gray-800 border-l-4 border-l-transparent'}`;
+                tr.onclick = () => { currentSelectedTeam = comp.id; renderLeaderboard(); renderPitch(comp.id); };
+
+                tr.innerHTML = `
+                    <td class="p-1 sm:p-2 font-bold flex items-center gap-1 sm:gap-2 truncate max-w-[80px] sm:max-w-[150px]">
+                        ${getStaticShirtSvg("w-4 h-4 sm:w-5 sm:h-5 shrink-0")} ${comp.name}
+                    </td>
+                    <td class="p-1 sm:p-2 text-center text-gray-400 font-mono">${s.r10}</td>
+                    <td class="p-1 sm:p-2 text-center text-gray-400 font-mono">${s.r20}</td>
+                    <td class="p-1 sm:p-2 text-center text-gray-400 font-mono">${s.r30}</td>
+                    <td class="p-1 sm:p-2 text-center text-gray-400 font-mono">${s.slut}</td>
+                    <td class="p-1 sm:p-2 text-center text-green-400 font-bold font-mono bg-gray-900/40">${s.total}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderPitch(competitorId) {
+            const comp = COMPETITORS.find(c => c.id === competitorId);
+            const zones = { 'GK': 'row-gk', 'DEF': 'row-def', 'MID': 'row-mid', 'FWD': 'row-fwd' };
+            Object.values(zones).forEach(id => document.getElementById(id).innerHTML = '');
+
+            const lockedRounds = ROUNDS.filter(r => roundLocks[r]);
+            let roundText = "Inför Omgång 10";
+            if (lockedRounds.includes('slut')) roundText = "Slutställning";
+            else if (lockedRounds.includes('r30')) roundText = "Efter Omgång 30";
+            else if (lockedRounds.includes('r20')) roundText = "Efter Omgång 20";
+            else if (lockedRounds.includes('r10')) roundText = "Efter Omgång 10";
+            document.getElementById('pitch-round-status').innerText = roundText;
+
+            if(!comp) {
+                document.getElementById('pitch-team-name').innerText = 'Inga lag';
+                document.getElementById('pitch-team-formation').innerText = '';
+                return;
+            }
+
+            document.getElementById('pitch-team-name').innerText = comp.name;
+            document.getElementById('pitch-team-formation').innerHTML = `
+                ${comp.formation || '4-3-3'}
+                <button id="btn-edit-team" onclick="editTeam('${comp.id}')" class="ml-2 text-[10px] bg-blue-600 hover:bg-blue-500 text-white px-1.5 py-0.5 rounded shadow pointer-events-auto ${isCompetitionLocked ? 'hidden' : ''}">Ändra lag</button>
+            `;
+
+            const latestRound = getLatestLockedRound();
+
+            comp.squad.forEach(pid => {
+                const p = PLAYERS[pid];
+                let rawGoals = 0, rawAssists = 0, totTeam = 0, totPts = 0;
+                if (latestRound) {
+                    rawGoals = statsState.players[pid][latestRound].goals;
+                    rawAssists = statsState.players[pid][latestRound].assists;
+                    totTeam = calcTeamPts(p.team, latestRound, p.pos);
+                    totPts = calcIndPts(pid, latestRound) + totTeam;
+                }
+                
+                const finalPts = roundDec(totPts);
+                const ptsGoals = roundDec(rawGoals * 2);
+                const ptsAssists = roundDec(rawAssists * 1);
+                
+                const tooltipPosClass = p.pos === 'GK' ? 'bottom-full mb-2' : 'top-full mt-2';
+
+                const div = document.createElement('div');
+                div.className = 'relative flex flex-col items-center justify-end tooltip-container cursor-pointer focus:outline-none';
+                
+                div.innerHTML = `
+                    ${getJerseySvg(p.team, "w-12 h-12 sm:w-14 sm:h-14 mb-1")}
+                    <div class="bg-gray-900/90 text-white text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-t text-center whitespace-nowrap border border-gray-700 border-b-0 shadow-md leading-none z-10 w-full pointer-events-none">
+                        ${p.name}
+                    </div>
+                    <div class="bg-gray-800 text-green-400 text-[10px] font-bold px-2 py-0.5 rounded-b text-center whitespace-nowrap border border-gray-700 shadow-md leading-none z-10 w-full pointer-events-none">
+                        ${finalPts} p
+                    </div>
+                    
+                    <div class="player-tooltip absolute ${tooltipPosClass} bg-black/95 text-white text-[10px] sm:text-xs p-2 rounded shadow-2xl border border-gray-600 w-44 z-[100] hidden">
+                        <div class="font-bold text-center border-b border-gray-600 pb-1 mb-1 text-blue-300">${p.name}</div>
+                        <div class="flex justify-between items-center py-0.5"><span>Mål (${rawGoals} st):</span> <span class="text-green-400 font-mono">${ptsGoals}p</span></div>
+                        <div class="flex justify-between items-center py-0.5"><span>Assist (${rawAssists} st):</span> <span class="text-green-400 font-mono">${ptsAssists}p</span></div>
+                        <div class="flex justify-between items-center py-0.5"><span>Lagbonus:</span> <span class="text-purple-400 font-mono">${roundDec(totTeam)}p</span></div>
+                        <div class="flex justify-between items-center font-bold border-t border-gray-600 mt-1 pt-1"><span>Totalt:</span> <span class="text-green-400 font-mono">${finalPts}p</span></div>
+                    </div>
+                `;
+                
+                div.onclick = (e) => {
+                    e.stopPropagation();
+                    const tooltip = div.querySelector('.player-tooltip');
+                    const isHidden = tooltip.classList.contains('hidden');
+                    document.querySelectorAll('.player-tooltip').forEach(el => el.classList.add('hidden'));
+                    document.querySelectorAll('.tooltip-container').forEach(el => { el.classList.remove('z-[60]'); el.style.zIndex = ''; });
+                    document.querySelectorAll('#row-fwd, #row-mid, #row-def, #row-gk').forEach(el => el.style.zIndex = '');
+                    if (isHidden) {
+                        tooltip.classList.remove('hidden');
+                        div.classList.add('z-[60]');
+                        div.parentElement.style.zIndex = '50';
+                    }
+                };
+                document.getElementById(zones[p.pos]).appendChild(div);
+            });
+        }
+
+        function toggleRules() { document.getElementById('rules-modal').classList.toggle('hidden'); }
+        function toggleInfo() { document.getElementById('info-modal').classList.toggle('hidden'); }
+        
+        function toggleStats() {
+            const m = document.getElementById('stats-modal');
+            if (m.classList.contains('hidden')) {
+                closeStatsPlayerDetails();
+                renderStats();
+                m.classList.remove('hidden');
+            } else {
+                m.classList.add('hidden');
+            }
+        }
+
+        document.addEventListener('click', (e) => {
+            const popup = document.getElementById('stats-player-details');
+            if (popup && !popup.classList.contains('hidden')) {
+                if (!e.target.closest('#stats-player-details') && !e.target.closest('.stats-player-row')) {
+                    closeStatsPlayerDetails();
+                }
+            }
+            if (!e.target.closest('.tooltip-container')) {
+                document.querySelectorAll('.player-tooltip').forEach(el => el.classList.add('hidden'));
+                document.querySelectorAll('.tooltip-container').forEach(el => { el.classList.remove('z-[60]'); el.style.zIndex = ''; });
+                document.querySelectorAll('#row-fwd, #row-mid, #row-def, #row-gk').forEach(el => el.style.zIndex = '');
+            }
+        });
+
+        function closeStatsPlayerDetails() {
+            document.getElementById('stats-player-details').classList.add('hidden');
+        }
+
+        function openStatsPlayerDetails(e, pid, name, pos, tid, tG, tA, tPts, rawT, rawGf, rawGa) {
+            e.stopPropagation();
+            const popup = document.getElementById('stats-player-details');
+            
+            document.getElementById('spd-name').innerText = name;
+            document.getElementById('spd-g-count').innerText = tG;
+            document.getElementById('spd-g-pts').innerText = (tG*2) + 'p';
+            document.getElementById('spd-a-count').innerText = tA;
+            document.getElementById('spd-a-pts').innerText = (tA*1) + 'p';
+            
+            const latestRound = getLatestLockedRound();
+            let lpPts = 0, gfPts = 0, gaPts = 0;
+            if(latestRound) {
+                lpPts = roundDec((statsState.teams[tid][latestRound].lp / 4) + (statsState.teams[tid][latestRound].titles * 20));
+                gfPts = getGfPts(statsState.teams[tid][latestRound].gf);
+                if (pos === 'DEF' || pos === 'GK') gaPts = getGaPts(statsState.teams[tid][latestRound].ga);
+            }
+            
+            document.getElementById('spd-l-pts').innerText = lpPts + 'p';
+            document.getElementById('spd-gf-pts').innerText = gfPts + 'p';
+            
+            const gaRow = document.getElementById('spd-ga-row');
+            if(pos === 'DEF' || pos === 'GK') {
+                gaRow.classList.remove('hidden'); gaRow.classList.add('flex');
+                document.getElementById('spd-ga-pts').innerText = gaPts + 'p';
+            } else {
+                gaRow.classList.remove('flex'); gaRow.classList.add('hidden');
+            }
+            
+            document.getElementById('spd-tot-pts').innerText = tPts + 'p';
+
+            popup.classList.remove('hidden');
+            
+            const scrollArea = document.getElementById('stats-scroll-area');
+            const rect = scrollArea.getBoundingClientRect();
+            
+            let y = e.clientY - rect.top + scrollArea.scrollTop;
+            if (y > scrollArea.scrollHeight - 250) y = scrollArea.scrollHeight - 250; 
+            
+            popup.style.top = `${y}px`;
+            popup.style.left = `50%`;
+            popup.style.transform = `translateX(-50%)`;
+        }
+
+        function renderStats() {
+            const { players, teams } = getActiveEntities();
+            const latestRound = getLatestLockedRound();
+            
+            const pData = players.map(p => {
+                let tG = 0, tA = 0, tPts = 0;
+                if (latestRound) {
+                    tG = statsState.players[p.id][latestRound].goals;
+                    tA = statsState.players[p.id][latestRound].assists;
+                    tPts = calcIndPts(p.id, latestRound) + calcTeamPts(p.team, latestRound, p.pos);
+                }
+                return { ...p, tG, tA, tPts: roundDec(tPts) };
+            });
+            pData.sort((a, b) => b.tPts - a.tPts);
+            
+            const tbodyP = document.getElementById('stats-players-tbody');
+            tbodyP.innerHTML = '';
+            pData.forEach(p => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-700/50 cursor-pointer stats-player-row transition";
+                tr.onclick = (e) => openStatsPlayerDetails(e, p.id, p.name, p.pos, p.team, p.tG, p.tA, p.tPts);
+                tr.innerHTML = `
+                    <td class="p-1.5 font-bold">${p.name}</td>
+                    <td class="p-1.5 text-gray-400">${p.pos}</td>
+                    <td class="p-1.5 text-gray-400 flex items-center gap-1.5">${getJerseySvg(p.team, "w-4 h-4 shrink-0")} <span class="truncate">${TEAMS[p.team].name}</span></td>
+                    <td class="p-1.5 text-center text-green-400 font-bold">${p.tPts}</td>
+                `;
+                tbodyP.appendChild(tr);
+            });
+
+            const tData = teams.map(t => {
+                let tGf = 0, tGa = 0, tLp = 0, tTit = 0;
+                if (latestRound) {
+                    tGf = statsState.teams[t.id][latestRound].gf; tGa = statsState.teams[t.id][latestRound].ga;
+                    tLp = statsState.teams[t.id][latestRound].lp; tTit = statsState.teams[t.id][latestRound].titles;
+                }
+                return { ...t, tGf, tGa, tLp, tTit };
+            });
+            tData.sort((a, b) => b.tLp - a.tLp);
+
+            document.getElementById('stats-teams-tbody').innerHTML = tData.map(t => `
+                <tr class="hover:bg-gray-700/50">
+                    <td class="p-1.5 font-bold flex items-center gap-2">${getJerseySvg(t.id, "w-5 h-5 sm:w-6 sm:h-6 shrink-0")} ${t.name}</td>
+                    <td class="p-1.5 text-center">${t.tGf}</td>
+                    <td class="p-1.5 text-center">${t.tGa}</td>
+                    <td class="p-1.5 text-center">${t.tLp}</td>
+                    <td class="p-1.5 text-center text-yellow-400">${t.tTit}</td>
+                </tr>
+            `).join('');
+        }
+
+        function editTeam(teamId) {
+            if (isCompetitionLocked) return;
+            const comp = COMPETITORS.find(c => c.id === teamId);
+            if(!comp) return;
+
+            editingTeamId = teamId;
+            newSquadSelection = [...comp.squad];
+            currentCreationFormation = comp.formation || '4-3-3';
+            
+            const m = document.getElementById('create-modal');
+            document.querySelector(`input[name="formation"][value="${currentCreationFormation}"]`).checked = true;
+            
+            let nameVal = comp.name;
+            if (nameVal.toLowerCase().startsWith("team ")) nameVal = nameVal.substring(5);
+            document.getElementById('new-team-name').value = nameVal;
+            
+            document.getElementById('create-error-msg').innerText = '';
+            document.getElementById('modal-title-create').innerText = 'Ändra lag';
+            
+            renderCreateTeamLists();
+            m.classList.remove('hidden');
+        }
+
+        function toggleCreateTeam() {
+            const m = document.getElementById('create-modal');
+            if(m.classList.contains('hidden')) {
+                if(isCompetitionLocked) return;
+                editingTeamId = null;
+                document.getElementById('modal-title-create').innerText = 'Skapa lag';
+                newSquadSelection = []; currentCreationFormation = '4-3-3';
+                document.querySelector('input[name="formation"][value="4-3-3"]').checked = true;
+                document.getElementById('new-team-name').value = '';
+                document.getElementById('create-error-msg').innerText = '';
+                renderCreateTeamLists();
+                m.classList.remove('hidden');
+            } else m.classList.add('hidden');
+        }
+
+        function handleFormationChange() {
+            const sel = document.querySelector('input[name="formation"]:checked').value;
+            if (currentCreationFormation !== sel) {
+                currentCreationFormation = sel; newSquadSelection = []; renderCreateTeamLists();
+            }
+        }
+
+        function togglePlayerSelection(pid) {
+            const idx = newSquadSelection.indexOf(pid);
+            const p = PLAYERS[pid], limits = FORMATIONS[currentCreationFormation];
+
+            if(idx > -1) newSquadSelection.splice(idx, 1);
+            else {
+                if(newSquadSelection.length >= 11) return document.getElementById('create-error-msg').innerText = "Max 11 spelare.";
+                if(newSquadSelection.filter(id => PLAYERS[id].pos === p.pos).length >= limits[p.pos]) 
+                    return document.getElementById('create-error-msg').innerText = `Max för position (${limits[p.pos]}).`;
+                newSquadSelection.push(pid);
+                document.getElementById('create-error-msg').innerText = ""; 
+            }
+            renderCreateTeamLists();
+        }
+
+        function renderCreateTeamLists() {
+            const limits = FORMATIONS[currentCreationFormation];
+            document.getElementById('selection-count-total').innerText = newSquadSelection.length;
+            ['GK', 'DEF', 'MID', 'FWD'].forEach(pos => document.getElementById(`count-${pos.toLowerCase()}`).innerText = `${newSquadSelection.filter(id => PLAYERS[id].pos===pos).length}/${limits[pos]}`);
+
+            const btnSave = document.getElementById('btn-save-new-team');
+            btnSave.disabled = newSquadSelection.length !== 11;
+            btnSave.className = `cm-btn px-3 py-1.5 rounded text-xs font-bold ${btnSave.disabled ? 'opacity-50 cursor-not-allowed' : ''}`;
+
+            const cons = { 'GK': document.getElementById('list-gk'), 'DEF': document.getElementById('list-def'), 'MID': document.getElementById('list-mid'), 'FWD': document.getElementById('list-fwd') };
+            Object.values(cons).forEach(c => c.innerHTML = '');
+
+            Object.entries(PLAYERS).sort((a,b) => a[1].name.localeCompare(b[1].name)).forEach(([pid, p]) => {
+                const isSel = newSquadSelection.includes(pid);
+                const posFull = !isSel && newSquadSelection.filter(id => PLAYERS[id].pos===p.pos).length >= limits[p.pos];
+                cons[p.pos].innerHTML += `
+                    <div onclick="${posFull ? '' : `togglePlayerSelection('${pid}')`}" 
+                         class="p-1 border border-gray-700 rounded bg-gray-800 flex items-center justify-between cursor-pointer transition-colors
+                         ${isSel ? 'selected-player' : ''} ${posFull ? 'disabled-player' : 'hover:bg-gray-700'}">
+                        <div class="flex flex-col overflow-hidden w-full">
+                            <span class="font-bold text-white text-[10px] sm:text-xs truncate">${p.name}</span>
+                            <div class="flex items-center gap-1 mt-0.5">
+                                ${getJerseySvg(p.team, "w-3 h-3 sm:w-4 sm:h-4 shrink-0")}
+                                <span class="text-[8px] sm:text-[9px] text-gray-400 uppercase truncate">${TEAMS[p.team].name}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function saveNewTeam() {
+            let name = document.getElementById('new-team-name').value.trim();
+            if(!name) return document.getElementById('create-error-msg').innerText = "Ange ett förnamn!";
+            if (!name.toLowerCase().startsWith('team ')) name = 'Team ' + name;
+
+            if (editingTeamId) {
+                const comp = COMPETITORS.find(c => c.id === editingTeamId);
+                if (comp) { comp.name = name; comp.formation = currentCreationFormation; comp.squad = [...newSquadSelection]; }
+            } else {
+                const myTeam = { id: 'team_' + Date.now() + '_' + Math.floor(Math.random()*1000), name, formation: currentCreationFormation, squad: [...newSquadSelection] };
+                COMPETITORS.push(myTeam);
+                currentSelectedTeam = myTeam.id;
+            }
+            
+            saveToCloud(); // Skickar laget till Firebase!
+            document.getElementById('create-modal').classList.add('hidden');
+            
+            renderLeaderboard(); 
+            if(currentSelectedTeam) renderPitch(currentSelectedTeam);
+        }
+
+        function handleAdminClick() {
+            if (localStorage.getItem('ff_admin_auth') === 'true') openAdmin();
+            else toggleLogin();
+        }
+
+        function toggleLogin() {
+            const m = document.getElementById('login-modal');
+            if (m.classList.contains('hidden')) {
+                document.getElementById('admin-pwd').value = '';
+                document.getElementById('login-error').classList.add('hidden');
+                document.getElementById('save-pwd-check').checked = false;
+                m.classList.remove('hidden');
+            } else m.classList.add('hidden');
+        }
+
+        function checkLogin() {
+            if (document.getElementById('admin-pwd').value === 'heskey') {
+                if (document.getElementById('save-pwd-check').checked) localStorage.setItem('ff_admin_auth', 'true'); // Endast inlogg sparas lokalt
+                toggleLogin(); openAdmin();
+            } else document.getElementById('login-error').classList.remove('hidden');
+        }
+
+        function getActiveEntities() {
+            let pIds = new Set(), tIds = new Set();
+            COMPETITORS.forEach(c => c.squad.forEach(pid => pIds.add(pid)));
+            pIds.forEach(pid => tIds.add(PLAYERS[pid].team));
+            return {
+                players: Array.from(pIds).map(id => ({ id, ...PLAYERS[id] })),
+                teams: Array.from(tIds).map(id => ({ id, ...TEAMS[id] }))
+            };
+        }
+
+        function isRoundFilled(rId) {
+            const { players, teams } = getActiveEntities();
+            if (teams.length === 0 && players.length === 0) return false;
+            let sum = 0;
+            teams.forEach(t => { sum += statsState.teams[t.id][rId].lp + statsState.teams[t.id][rId].gf + statsState.teams[t.id][rId].ga + statsState.teams[t.id][rId].titles; });
+            players.forEach(p => { sum += statsState.players[p.id][rId].goals + statsState.players[p.id][rId].assists; });
+            return sum > 0;
+        }
+
+        function openAdmin() {
+            if(!roundLocks.r10) currentAdminRoundId = 'r10';
+            else if(!roundLocks.r20) currentAdminRoundId = 'r20';
+            else if(!roundLocks.r30) currentAdminRoundId = 'r30';
+            else currentAdminRoundId = 'slut';
+            
+            currentAdminMainTab = 'results';
+            currentAdminSubTab = 'lag';
+            updateAdminMainTabsUI();
+            
+            document.getElementById('admin-modal').classList.remove('hidden');
+        }
+
+        function toggleAdmin() { document.getElementById('admin-modal').classList.add('hidden'); }
+
+        function switchMainAdminTab(tab) {
+            if (currentAdminMainTab === 'results' && !roundLocks[currentAdminRoundId]) captureAdminUIState(currentAdminRoundId); 
+            currentAdminMainTab = tab;
+            updateAdminMainTabsUI();
+        }
+
+        function updateAdminMainTabsUI() {
+            const btnRes = document.getElementById('main-tab-results'), btnTest = document.getElementById('main-tab-test');
+            const aRes = document.getElementById('admin-results-area'), aTest = document.getElementById('admin-test-area');
+
+            if (currentAdminMainTab === 'results') {
+                btnRes.className = 'cm-btn cm-active-tab px-4 py-1.5 text-xs rounded transition whitespace-nowrap';
+                btnTest.className = 'cm-btn px-4 py-1.5 text-xs rounded transition whitespace-nowrap';
+                aRes.classList.remove('hidden'); aRes.classList.add('flex');
+                aTest.classList.add('hidden');
+                buildAdminUI();
+            } else {
+                btnRes.className = 'cm-btn px-4 py-1.5 text-xs rounded transition whitespace-nowrap';
+                btnTest.className = 'cm-btn cm-active-tab px-4 py-1.5 text-xs rounded transition whitespace-nowrap';
+                aRes.classList.add('hidden'); aRes.classList.remove('flex');
+                aTest.classList.remove('hidden');
+            }
+        }
+
+        function switchAdminRoundTab(rId) {
+            if(!roundLocks[currentAdminRoundId]) captureAdminUIState(currentAdminRoundId);
+            currentAdminRoundId = rId;
+            buildAdminUI();
+        }
+
+        function switchAdminSubTab(tab) {
+            currentAdminSubTab = tab;
+            buildAdminUI();
+        }
+
+        function toggleRoundLock() {
+            if(!roundLocks[currentAdminRoundId]) captureAdminUIState(currentAdminRoundId);
+            roundLocks[currentAdminRoundId] = !roundLocks[currentAdminRoundId];
+            
+            saveToCloud();
+            
+            if (roundLocks[currentAdminRoundId]) {
+                if(currentAdminRoundId === 'r10' && !roundLocks.r20) currentAdminRoundId = 'r20';
+                else if(currentAdminRoundId === 'r20' && !roundLocks.r30) currentAdminRoundId = 'r30';
+                else if(currentAdminRoundId === 'r30' && !roundLocks.slut) currentAdminRoundId = 'slut';
+            }
+            buildAdminUI();
+        }
+
+        function buildAdminUI() {
+            if (currentAdminMainTab !== 'results') return; 
+
+            ROUNDS.forEach(r => {
+                const btn = document.getElementById(`tab-${r}`);
+                const filledMark = (!roundLocks[r] && isRoundFilled(r)) ? ' ✅' : '';
+                const lockMark = roundLocks[r] ? ' 🔒' : '';
+                
+                if (r === currentAdminRoundId) btn.className = 'px-3 py-1 text-xs font-bold rounded bg-blue-600 text-white shadow';
+                else btn.className = 'px-3 py-1 text-xs font-bold rounded text-gray-400 hover:bg-gray-700 transition';
+                
+                let label = r === 'slut' ? 'Slutställning' : r.replace('r','Omgång ');
+                btn.innerHTML = label + lockMark + filledMark;
+            });
+
+            const btnLag = document.getElementById('sub-tab-lag'), btnSpelare = document.getElementById('sub-tab-spelare');
+            const viewLag = document.getElementById('admin-view-lag'), viewSpelare = document.getElementById('admin-view-spelare');
+
+            if(currentAdminSubTab === 'lag') {
+                btnLag.className = 'px-6 py-1 text-xs font-bold rounded bg-gray-800 text-white shadow border border-gray-500';
+                btnSpelare.className = 'px-6 py-1 text-xs font-bold rounded text-gray-300 hover:bg-gray-600';
+                viewLag.classList.remove('hidden'); viewLag.classList.add('flex');
+                viewSpelare.classList.add('hidden'); viewSpelare.classList.remove('flex');
+            } else {
+                btnSpelare.className = 'px-6 py-1 text-xs font-bold rounded bg-gray-800 text-white shadow border border-gray-500';
+                btnLag.className = 'px-6 py-1 text-xs font-bold rounded text-gray-300 hover:bg-gray-600';
+                viewSpelare.classList.remove('hidden'); viewSpelare.classList.add('flex');
+                viewLag.classList.add('hidden'); viewLag.classList.remove('flex');
+            }
+
+            const { players, teams } = getActiveEntities();
+            const isLocked = roundLocks[currentAdminRoundId];
+            const lockOverlay = document.getElementById('lock-overlay');
+            const btnLock = document.getElementById('btn-lock-round');
+
+            if (isLocked) {
+                lockOverlay.classList.remove('hidden'); lockOverlay.classList.add('flex');
+                btnLock.innerText = 'Lås upp omgång';
+                btnLock.className = 'ml-4 shrink-0 bg-yellow-600/20 text-yellow-400 border border-yellow-500 px-3 py-1.5 rounded text-xs font-bold hover:bg-yellow-600/40 transition font-sans';
+            } else {
+                lockOverlay.classList.add('hidden'); lockOverlay.classList.remove('flex');
+                btnLock.innerText = 'Lås omgång';
+                btnLock.className = 'ml-4 shrink-0 bg-red-600/20 text-red-400 border border-red-500 px-3 py-1.5 rounded text-xs font-bold hover:bg-red-600/40 transition font-sans';
+            }
+
+            const tBody = document.getElementById('admin-teams-tbody');
+            tBody.innerHTML = '';
+            if (teams.length === 0) tBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Inga lag valda.</td></tr>';
+            teams.sort((a,b) => a.name.localeCompare(b.name)).forEach(t => {
+                const s = statsState.teams[t.id][currentAdminRoundId];
+                tBody.innerHTML += `
+                    <tr class="hover:bg-gray-700/50">
+                        <td class="p-2 flex items-center gap-2">${getJerseySvg(t.id, "w-5 h-5 sm:w-6 sm:h-6 shrink-0")} <span class="font-bold truncate text-[10px] sm:text-xs">${t.name}</span></td>
+                        <td class="p-1 text-center w-12 sm:w-14"><input type="number" id="adm_t_${t.id}_lp" value="${s.lp}" class="w-full bg-gray-900 border border-gray-600 rounded p-1 text-center text-xs text-white focus:border-blue-500" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" ${isLocked?'disabled':''}></td>
+                        <td class="p-1 text-center w-12 sm:w-14"><input type="number" id="adm_t_${t.id}_gf" value="${s.gf}" class="w-full bg-gray-900 border border-gray-600 rounded p-1 text-center text-xs text-white focus:border-blue-500" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" ${isLocked?'disabled':''}></td>
+                        <td class="p-1 text-center w-12 sm:w-14"><input type="number" id="adm_t_${t.id}_ga" value="${s.ga}" class="w-full bg-gray-900 border border-gray-600 rounded p-1 text-center text-xs text-white focus:border-blue-500" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" ${isLocked?'disabled':''}></td>
+                        <td class="p-1 text-center w-12 sm:w-14"><input type="number" id="adm_t_${t.id}_ti" value="${s.titles}" class="w-full bg-gray-900 border border-yellow-600/50 rounded p-1 text-center text-xs text-yellow-100 focus:border-yellow-500" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" ${isLocked?'disabled':''}></td>
+                    </tr>
+                `;
+            });
+
+            const pGrid = document.getElementById('admin-players-grid');
+            pGrid.innerHTML = '';
+            if (players.length === 0) pGrid.innerHTML = '<div class="p-4 text-center col-span-full">Inga spelare valda.</div>';
+            players.sort((a,b) => a.team.localeCompare(b.team) || a.name.localeCompare(b.name)).forEach(p => {
+                const s = statsState.players[p.id][currentAdminRoundId];
+                pGrid.innerHTML += `
+                    <div class="bg-gray-800 p-1 sm:p-1.5 border border-gray-700 rounded flex justify-between items-center shadow-sm hover:bg-gray-700/50">
+                        <div class="flex flex-col truncate pr-1">
+                            <span class="font-bold text-[10px] sm:text-xs truncate">${p.name}</span>
+                            <span class="text-[8px] text-gray-500 uppercase flex items-center gap-1 mt-0.5">${getJerseySvg(p.team, "w-3 h-3 shrink-0")} ${p.team} - ${p.pos}</span>
+                        </div>
+                        <div class="flex gap-1 shrink-0">
+                            <div class="flex flex-col items-center"><span class="text-[7px] text-gray-400 mb-0.5">Mål</span><input type="number" id="adm_p_${p.id}_g" value="${s.goals}" class="w-8 sm:w-9 bg-gray-900 border border-gray-600 rounded p-0.5 text-center text-[10px] sm:text-xs text-white focus:border-green-500" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" ${isLocked?'disabled':''}></div>
+                            <div class="flex flex-col items-center"><span class="text-[7px] text-gray-400 mb-0.5">Ass</span><input type="number" id="adm_p_${p.id}_a" value="${s.assists}" class="w-8 sm:w-9 bg-gray-900 border border-gray-600 rounded p-0.5 text-center text-[10px] sm:text-xs text-white focus:border-green-500" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" ${isLocked?'disabled':''}></div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function captureAdminUIState(rId) {
+            if(roundLocks[rId]) return; 
+            const { players, teams } = getActiveEntities();
+            teams.forEach(t => {
+                const lp=document.getElementById(`adm_t_${t.id}_lp`), gf=document.getElementById(`adm_t_${t.id}_gf`), ga=document.getElementById(`adm_t_${t.id}_ga`), ti=document.getElementById(`adm_t_${t.id}_ti`);
+                if(lp) statsState.teams[t.id][rId].lp = parseFloat(lp.value)||0;
+                if(gf) statsState.teams[t.id][rId].gf = parseFloat(gf.value)||0;
+                if(ga) statsState.teams[t.id][rId].ga = parseFloat(ga.value)||0;
+                if(ti) statsState.teams[t.id][rId].titles = parseFloat(ti.value)||0;
+            });
+            players.forEach(p => {
+                const g=document.getElementById(`adm_p_${p.id}_g`), a=document.getElementById(`adm_p_${p.id}_a`);
+                if(g) statsState.players[p.id][rId].goals = parseFloat(g.value)||0;
+                if(a) statsState.players[p.id][rId].assists = parseFloat(a.value)||0;
+            });
+        }
+
+        function saveAdminData() {
+            if(currentAdminMainTab === 'results' && !roundLocks[currentAdminRoundId]) captureAdminUIState(currentAdminRoundId);
+            saveToCloud(); // Skickar statisktik till Firebase
+            renderLeaderboard();
+            if(currentSelectedTeam) renderPitch(currentSelectedTeam);
+            toggleAdmin();
+        }
+
+        function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+        function simulateRound() {
+            if(roundLocks[currentAdminRoundId]) return showMsg(`Omgången är låst! Lås upp den först.`);
+            const { players, teams } = getActiveEntities();
+            teams.forEach(t => {
+                statsState.teams[t.id][currentAdminRoundId].lp = randInt(12, 28);
+                statsState.teams[t.id][currentAdminRoundId].gf = randInt(15, 60);
+                statsState.teams[t.id][currentAdminRoundId].ga = randInt(5, 45);
+                statsState.teams[t.id][currentAdminRoundId].titles = (currentAdminRoundId === 'slut' && Math.random() > 0.8) ? 1 : 0;
+            });
+            players.forEach(p => {
+                let g = 0, a = 0;
+                if(p.pos === 'FWD') { g = randInt(2, 8); a = randInt(1, 4); }
+                else if(p.pos === 'MID') { g = randInt(1, 4); a = randInt(2, 7); }
+                else if(p.pos === 'DEF') { g = randInt(0, 1); a = randInt(0, 2); }
+                statsState.players[p.id][currentAdminRoundId].goals = g;
+                statsState.players[p.id][currentAdminRoundId].assists = a;
+            });
+            saveToCloud();
+            showMsg(`Simulerade poäng för ${currentAdminRoundId === 'slut' ? 'Slutställning' : currentAdminRoundId.replace('r','Omgång ')}.`);
+            if (currentAdminMainTab === 'results') buildAdminUI();
+            renderLeaderboard(); if(currentSelectedTeam) renderPitch(currentSelectedTeam);
+        }
+
+        function resetRound() {
+            if(roundLocks[currentAdminRoundId]) return showMsg(`Omgången är låst! Lås upp den först.`);
+            const { players, teams } = getActiveEntities();
+            teams.forEach(t => { statsState.teams[t.id][currentAdminRoundId] = {lp:0, gf:0, ga:0, titles:0}; });
+            players.forEach(p => { statsState.players[p.id][currentAdminRoundId] = {goals:0, assists:0}; });
+            saveToCloud();
+            showMsg(`Återställde poäng för ${currentAdminRoundId === 'slut' ? 'Slutställning' : currentAdminRoundId.replace('r','Omgång ')}.`);
+            if (currentAdminMainTab === 'results') buildAdminUI();
+            renderLeaderboard(); if(currentSelectedTeam) renderPitch(currentSelectedTeam);
+        }
+
+        function addFictionalUser() {
+            const form = Math.random() > 0.5 ? '4-3-3' : '3-4-3';
+            const limits = FORMATIONS[form];
+            const selected = [];
+            const pArr = Object.entries(PLAYERS);
+            
+            ['GK', 'DEF', 'MID', 'FWD'].forEach(pos => {
+                let available = pArr.filter(x => x[1].pos === pos).map(x => x[0]).sort(() => 0.5 - Math.random());
+                selected.push(...available.slice(0, limits[pos]));
+            });
+
+            const newTeam = { id: 'test_' + Date.now(), name: 'Team Test-' + randInt(100, 999), formation: form, squad: selected };
+            COMPETITORS.push(newTeam);
+            saveToCloud();
+            showMsg(`Skapade ${newTeam.name} med uppställning ${form}.`);
+            renderLeaderboard();
+        }
+
+        window.onload = () => {
+            initializeData();
+        };
+    </script>
+</body>
+</html>
