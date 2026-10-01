@@ -163,16 +163,16 @@
                 </div>
             </div>
 
-            <!-- Fixad layout: Tvingar planen att aldrig bli högre än utrymmet tillåter och minskar max-w -->
-            <div class="flex-1 p-1 pt-12 pb-2 sm:p-2 sm:pt-14 flex justify-center items-center min-h-0 font-sans relative">
-                <div class="pitch-bg w-full max-w-[280px] sm:max-w-md h-full rounded shadow-inner flex flex-col justify-around py-1 sm:py-3 px-1 shrink-0">
+            <!-- Komprimerad layout: Tvingar planen att aldrig bli högre än utrymmet tillåter, packar ihop spelarna mer i mitten -->
+            <div class="flex-1 p-2 pt-14 pb-4 sm:p-4 sm:pt-16 flex justify-center items-center min-h-0 font-sans relative box-border">
+                <div class="pitch-bg w-full max-w-[260px] sm:max-w-md h-[95%] max-h-full rounded shadow-inner flex flex-col justify-center gap-2 sm:gap-6 py-2 px-1 shrink-0">
                     <div class="pitch-lines">
                         <div class="penalty-box-top"></div>
                         <div class="center-line"></div>
                         <div class="center-circle"></div>
                         <div class="penalty-box-bottom"></div>
                     </div>
-                    <!-- Spelarzomer -->
+                    <!-- Spelarzomer komprimerade -->
                     <div id="row-fwd" class="flex justify-evenly w-full z-10 mt-1"></div>
                     <div id="row-mid" class="flex justify-evenly w-full z-10"></div>
                     <div id="row-def" class="flex justify-evenly w-full z-10"></div>
@@ -257,7 +257,7 @@
             </div>
             <div class="p-4 space-y-4 text-gray-300 text-sm overflow-y-auto flex-1">
                 <p><strong>Vad du ska göra:</strong> Ta ut ditt lag utifrån två taktiska varianter (4-3-3 eller 3-4-3) senast kl 13:30 den 10 oktober.</p>
-                <p><strong>Samla poäng:</strong> Utifrån poängsystemet. Alla poäng räknas samman vid fyra specifika tillfällen per säsong (Omg 10, 20, 30 och Slutställning).</p>
+                <p><strong>Samla poäng:</strong> Utifrån poängsystemet. Alla poäng räknas samman vid fyra specifika tillfällen per säsong (Omg 10, 20, 30 och Slutställning). Märk väl att Insläppta mål räknas ”baklänges”.</p>
                 <p>Luta dig tillbaka och följ dina spelares utveckling. I den här tävlingen gör vi inga byten under säsongen.</p>
                 <p class="text-yellow-400 font-bold border-l-4 border-yellow-400 pl-2">Viktig regel: Allt baseras ENBART på den egna inhemska ligan (mål, titlar osv.).</p>
                 <div>
@@ -269,6 +269,9 @@
                         <li><strong class="text-red-500">Bundesliga:</strong> Bayern München</li>
                     </ul>
                 </div>
+                <p class="text-[11px] text-gray-400 mt-2 border-t border-gray-700 pt-3 leading-relaxed">
+                    <strong>OBS:</strong> skapa ditt lag på den enhet (mobil, iPad, dator) som du vill utgå ifrån. Ditt lag sparas på den enheten. Från och med 10 oktober kan du dock följa och se samtliga lag och spelare från vilken enhet du vill.
+                </p>
             </div>
             <div class="p-2 border-t border-gray-700 flex justify-end shrink-0 cm-bg-nav cm-font">
                 <button onclick="toggleInfo()" class="cm-btn px-4 py-1.5 rounded text-xs font-bold">Förstått</button>
@@ -895,7 +898,6 @@
             const isMyTeam = myTeams.includes(comp.id);
             const canEdit = isAdmin || isMyTeam;
 
-            // Kontrollera om laget är synligt för användaren
             const isVisible = isCompetitionLocked || isAdmin || isMyTeam;
 
             document.getElementById('pitch-team-formation').innerHTML = `
@@ -903,13 +905,11 @@
                 ${canEdit ? `<button id="btn-edit-team" onclick="editTeam('${comp.id}')" class="ml-2 text-[10px] bg-blue-600 hover:bg-blue-500 text-white px-1.5 py-0.5 rounded shadow pointer-events-auto ${isCompetitionLocked ? 'hidden' : ''}">Genomför spelarbyten</button>` : ''}
             `;
 
-            // Om tävlingen inte är låst och man tittar på någon annans lag (och inte är admin)
             if (!isVisible) {
                 document.getElementById('pitch-round-status').innerText = 'Laget är dolt fram till deadline';
-                return; // Ritar inte ut några spelare på planen
+                return; 
             }
 
-            // Om vi kommer hit visas planen normalt
             document.getElementById('pitch-round-status').innerText = roundText;
             const latestRound = getLatestLockedRound();
 
@@ -933,7 +933,7 @@
                 div.className = 'relative flex flex-col items-center justify-end tooltip-container cursor-pointer focus:outline-none';
                 
                 div.innerHTML = `
-                    ${getJerseySvg(p.team, "w-9 h-9 sm:w-12 sm:h-12 mb-0.5 sm:mb-1")}
+                    ${getJerseySvg(p.team, "w-8 h-8 sm:w-12 sm:h-12 mb-0.5 sm:mb-1")}
                     <div class="bg-gray-900/90 text-white text-[9px] sm:text-[10px] font-bold px-1 sm:px-2 py-0.5 rounded-t text-center whitespace-nowrap border border-gray-700 border-b-0 shadow-md leading-none z-10 w-full pointer-events-none">
                         ${p.name}
                     </div>
@@ -973,7 +973,6 @@
         function toggleStats() {
             const isAdmin = localStorage.getItem('ff_admin_auth') === 'true';
             
-            // Säkerställer att statistik-knappen är låst innan tävlingen startar för vanliga användare
             if (!isCompetitionLocked && !isAdmin) {
                 showMsg("Statistik och andras laguppställningar är dolda fram till deadline.");
                 return;
