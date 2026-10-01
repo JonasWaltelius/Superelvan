@@ -127,7 +127,7 @@
     <main class="flex-1 flex flex-col lg:flex-row p-2 gap-2 h-[calc(100vh-60px)] overflow-hidden">
         
         <!-- Vänster/Topp: Leaderboard -->
-        <div class="lg:w-1/2 bg-gray-800 rounded shadow flex flex-col border border-gray-700 overflow-hidden shrink-0 lg:shrink h-[40%] lg:h-full">
+        <div class="lg:w-1/2 bg-gray-800 rounded shadow flex flex-col border border-gray-700 overflow-hidden shrink-0 h-[45%] lg:h-full">
             <div class="p-2 border-b border-gray-700 cm-bg-nav shrink-0 flex justify-between items-center">
                 <h2 class="text-sm font-bold cm-text-yellow uppercase tracking-wider">Poängställning</h2>
             </div>
@@ -152,20 +152,20 @@
         </div>
 
         <!-- Höger/Botten: Fotbollsplan -->
-        <div class="lg:w-1/2 bg-gray-800 rounded shadow border border-gray-700 flex flex-col relative overflow-hidden h-[60%] lg:h-full">
+        <div class="lg:w-1/2 bg-gray-800 rounded shadow border border-gray-700 flex flex-col relative overflow-hidden h-[55%] lg:h-full">
             <div class="absolute top-2 left-2 right-2 z-20 pointer-events-none flex justify-between items-start gap-1.5 font-sans">
                 <div class="bg-black/80 px-2 py-1 rounded shadow border border-gray-600 flex items-center pointer-events-auto">
                     <h2 id="pitch-team-name" class="text-sm font-bold text-white">Laddar...</h2>
                     <span id="pitch-team-formation" class="text-[10px] text-gray-400 ml-1 font-mono"></span>
                 </div>
-                <div id="pitch-round-status" class="bg-blue-900/80 px-2 py-1 rounded shadow border border-blue-700 text-blue-200 text-xs font-bold">
+                <div id="pitch-round-status" class="bg-blue-900/80 px-2 py-1 rounded shadow border border-blue-700 text-blue-200 text-xs font-bold text-right">
                     Inför Omgång 10
                 </div>
             </div>
 
-            <!-- Fixad layout: Tvingar planen att aldrig bli högre än utrymmet tillåter -->
-            <div class="flex-1 p-1 pt-14 pb-2 sm:p-2 sm:pt-14 flex justify-center items-center min-h-0 font-sans relative">
-                <div class="pitch-bg w-full max-w-sm sm:max-w-md h-full rounded shadow-inner flex flex-col justify-between py-2 sm:py-4 px-1 shrink-0">
+            <!-- Fixad layout: Tvingar planen att aldrig bli högre än utrymmet tillåter och minskar max-w -->
+            <div class="flex-1 p-1 pt-12 pb-2 sm:p-2 sm:pt-14 flex justify-center items-center min-h-0 font-sans relative">
+                <div class="pitch-bg w-full max-w-[280px] sm:max-w-md h-full rounded shadow-inner flex flex-col justify-around py-1 sm:py-3 px-1 shrink-0">
                     <div class="pitch-lines">
                         <div class="penalty-box-top"></div>
                         <div class="center-line"></div>
@@ -256,8 +256,9 @@
                 <button onclick="toggleInfo()" class="text-gray-400 hover:text-white text-lg">&times;</button>
             </div>
             <div class="p-4 space-y-4 text-gray-300 text-sm overflow-y-auto flex-1">
-                <p><strong>Vad du ska göra:</strong> Ta ut ditt lag utifrån två taktiska varianter (4-3-3 eller 3-4-3).</p>
+                <p><strong>Vad du ska göra:</strong> Ta ut ditt lag utifrån två taktiska varianter (4-3-3 eller 3-4-3) senast kl 13:30 den 10 oktober.</p>
                 <p><strong>Samla poäng:</strong> Utifrån poängsystemet. Alla poäng räknas samman vid fyra specifika tillfällen per säsong (Omg 10, 20, 30 och Slutställning).</p>
+                <p>Luta dig tillbaka och följ dina spelares utveckling. I den här tävlingen gör vi inga byten under säsongen.</p>
                 <p class="text-yellow-400 font-bold border-l-4 border-yellow-400 pl-2">Viktig regel: Allt baseras ENBART på den egna inhemska ligan (mål, titlar osv.).</p>
                 <div>
                     <h3 class="font-bold text-white mb-2 border-b border-gray-700 pb-1">Medverkande Ligor & Lag</h3>
@@ -612,20 +613,33 @@
                 case 'RMA': fill = '#ffffff'; textFill = '#000'; break;
                 case 'ATM': defs = `<pattern id="atm-stripe" width="20" height="100" patternUnits="userSpaceOnUse"><rect width="10" height="100" fill="#ef4444"/><rect x="10" width="10" height="100" fill="#ffffff"/></pattern>`; fill = 'url(#atm-stripe)'; textFill = '#000'; break;
                 case 'PSG': fill = '#1e3a8a'; extras = `<rect x="42" y="10" width="16" height="80" fill="#ef4444" />`; break;
-                case 'BAY': fill = '#dc2626'; break;
+                case 'BAY': 
+                    fill = '#dc2626'; 
+                    extras = `
+                        <g stroke="#ffffff" stroke-width="1.5" opacity="0.8">
+                            <line x1="30" y1="10" x2="20" y2="30"/>
+                            <line x1="34" y1="12" x2="24" y2="32"/>
+                            <line x1="70" y1="10" x2="80" y2="30"/>
+                            <line x1="66" y1="12" x2="76" y2="32"/>
+                        </g>`; 
+                    break;
             }
             return `<div class="relative ${classes} flex flex-col items-center justify-center"><svg viewBox="0 0 100 100" class="absolute inset-0 w-full h-full drop-shadow-lg pointer-events-none"><defs>${defs}</defs><path d="M28,10 Q50,20 72,10 L95,28 L82,50 L75,45 L75,90 L25,90 L25,45 L18,50 L5,28 Z" fill="${fill}" stroke="${stroke}" stroke-width="3" stroke-linejoin="round"/>${extras}<text x="50%" y="58%" dominant-baseline="middle" text-anchor="middle" fill="${textFill}" font-size="24" font-weight="900" font-family="Arial, sans-serif" class="${textFill==='#fff'?'jersey-abbr':''}">${teamId}</text></svg></div>`;
         };
 
         const getStaticShirtSvg = (classes, teamId) => {
-            let fill = '#cbd5e1';
+            let fill = '#cbd5e1', extras = '';
             if(teamId) {
-                if(['ARS','LIV','BAY','ATM'].includes(teamId)) fill='#ef4444';
+                if(['ARS','LIV','ATM'].includes(teamId)) fill='#ef4444';
                 else if(teamId==='MCI') fill='#60a5fa';
                 else if(['CHE','PSG','BAR'].includes(teamId)) fill='#2563eb';
                 else if(teamId==='RMA') fill='#ffffff';
+                else if(teamId==='BAY') {
+                    fill='#dc2626';
+                    extras = `<g stroke="#ffffff" stroke-width="1.5" opacity="0.8"><line x1="30" y1="10" x2="20" y2="30"/><line x1="34" y1="12" x2="24" y2="32"/><line x1="70" y1="10" x2="80" y2="30"/><line x1="66" y1="12" x2="76" y2="32"/></g>`;
+                }
             }
-            return `<svg viewBox="0 0 100 100" class="${classes} drop-shadow-md"><path d="M28,10 Q50,20 72,10 L95,28 L82,50 L75,45 L75,90 L25,90 L25,45 L18,50 L5,28 Z" fill="${fill}" stroke="#1f2937" stroke-width="3" stroke-linejoin="round"/></svg>`;
+            return `<svg viewBox="0 0 100 100" class="${classes} drop-shadow-md"><path d="M28,10 Q50,20 72,10 L95,28 L82,50 L75,45 L75,90 L25,90 L25,45 L18,50 L5,28 Z" fill="${fill}" stroke="#1f2937" stroke-width="3" stroke-linejoin="round"/>${extras}</svg>`;
         };
 
         const FORMATIONS = { '4-3-3': { 'GK': 1, 'DEF': 4, 'MID': 3, 'FWD': 3 }, '3-4-3': { 'GK': 1, 'DEF': 3, 'MID': 4, 'FWD': 3 } };
@@ -709,7 +723,6 @@
                 timerEl.className = "text-[10px] sm:text-xs text-yellow-400 font-mono bg-black/50 px-2 py-0.5 rounded border border-gray-600 shadow-inner";
                 timerEl.classList.remove('hidden');
                 
-                // Döljer knappen Skapa Lag om man redan har skapat ett lag på denna enhet
                 if(btnCreate) {
                     if (myTeams.length > 0) {
                         btnCreate.classList.add('hidden');
@@ -867,9 +880,9 @@
             else if (lockedRounds.includes('r30')) roundText = "Efter Omgång 30";
             else if (lockedRounds.includes('r20')) roundText = "Efter Omgång 20";
             else if (lockedRounds.includes('r10')) roundText = "Efter Omgång 10";
-            document.getElementById('pitch-round-status').innerText = roundText;
-
+            
             if(!comp) {
+                document.getElementById('pitch-round-status').innerText = roundText;
                 document.getElementById('pitch-team-name').innerText = 'Inga lag';
                 document.getElementById('pitch-team-formation').innerText = '';
                 return;
@@ -879,14 +892,25 @@
             
             const myTeams = JSON.parse(localStorage.getItem('ff_my_teams') || '[]');
             const isAdmin = localStorage.getItem('ff_admin_auth') === 'true';
-            const canEdit = isAdmin || myTeams.includes(comp.id);
+            const isMyTeam = myTeams.includes(comp.id);
+            const canEdit = isAdmin || isMyTeam;
 
-            // Ändrat texten från "Ändra lag" till "Genomför spelarbyten"
+            // Kontrollera om laget är synligt för användaren
+            const isVisible = isCompetitionLocked || isAdmin || isMyTeam;
+
             document.getElementById('pitch-team-formation').innerHTML = `
-                ${comp.formation || '4-3-3'}
+                ${isVisible ? (comp.formation || '4-3-3') : ''}
                 ${canEdit ? `<button id="btn-edit-team" onclick="editTeam('${comp.id}')" class="ml-2 text-[10px] bg-blue-600 hover:bg-blue-500 text-white px-1.5 py-0.5 rounded shadow pointer-events-auto ${isCompetitionLocked ? 'hidden' : ''}">Genomför spelarbyten</button>` : ''}
             `;
 
+            // Om tävlingen inte är låst och man tittar på någon annans lag (och inte är admin)
+            if (!isVisible) {
+                document.getElementById('pitch-round-status').innerText = 'Laget är dolt fram till deadline';
+                return; // Ritar inte ut några spelare på planen
+            }
+
+            // Om vi kommer hit visas planen normalt
+            document.getElementById('pitch-round-status').innerText = roundText;
             const latestRound = getLatestLockedRound();
 
             comp.squad.forEach(pid => {
@@ -909,11 +933,11 @@
                 div.className = 'relative flex flex-col items-center justify-end tooltip-container cursor-pointer focus:outline-none';
                 
                 div.innerHTML = `
-                    ${getJerseySvg(p.team, "w-12 h-12 sm:w-14 sm:h-14 mb-1")}
-                    <div class="bg-gray-900/90 text-white text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-t text-center whitespace-nowrap border border-gray-700 border-b-0 shadow-md leading-none z-10 w-full pointer-events-none">
+                    ${getJerseySvg(p.team, "w-9 h-9 sm:w-12 sm:h-12 mb-0.5 sm:mb-1")}
+                    <div class="bg-gray-900/90 text-white text-[9px] sm:text-[10px] font-bold px-1 sm:px-2 py-0.5 rounded-t text-center whitespace-nowrap border border-gray-700 border-b-0 shadow-md leading-none z-10 w-full pointer-events-none">
                         ${p.name}
                     </div>
-                    <div class="bg-gray-800 text-green-400 text-[10px] font-bold px-2 py-0.5 rounded-b text-center whitespace-nowrap border border-gray-700 shadow-md leading-none z-10 w-full pointer-events-none">
+                    <div class="bg-gray-800 text-green-400 text-[9px] sm:text-[10px] font-bold px-1 sm:px-2 py-0.5 rounded-b text-center whitespace-nowrap border border-gray-700 shadow-md leading-none z-10 w-full pointer-events-none">
                         ${finalPts} p
                     </div>
                     
@@ -947,6 +971,14 @@
         function toggleInfo() { document.getElementById('info-modal').classList.toggle('hidden'); }
         
         function toggleStats() {
+            const isAdmin = localStorage.getItem('ff_admin_auth') === 'true';
+            
+            // Säkerställer att statistik-knappen är låst innan tävlingen startar för vanliga användare
+            if (!isCompetitionLocked && !isAdmin) {
+                showMsg("Statistik och andras laguppställningar är dolda fram till deadline.");
+                return;
+            }
+
             const m = document.getElementById('stats-modal');
             if (m.classList.contains('hidden')) {
                 closeStatsPlayerDetails();
