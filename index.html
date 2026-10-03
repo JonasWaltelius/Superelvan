@@ -163,7 +163,6 @@
                 </div>
             </div>
 
-            <!-- Scrollbar planvy: Tillåter vertikal scroll (overflow-y-auto) på mobiler om planen blir för hög -->
             <div class="flex-1 overflow-y-auto p-2 pt-14 pb-4 sm:p-4 sm:pt-16 flex justify-center items-start sm:items-center min-h-0 font-sans relative box-border">
                 <div class="pitch-bg w-full max-w-[280px] sm:max-w-md min-h-[460px] sm:min-h-[500px] h-full sm:h-[95%] max-h-none sm:max-h-full rounded shadow-inner flex flex-col justify-between py-4 sm:py-6 px-1 shrink-0">
                     <div class="pitch-lines">
@@ -291,6 +290,9 @@
                 
                 <!-- Klickbar spelardetalj (dyker upp ovanpå) -->
                 <div id="stats-player-details" class="absolute hidden bg-[#000080] border border-[#FFFF00] p-3 shadow-2xl z-[80] text-white text-xs w-64 rounded shadow-black/50 cm-font">
+                    <!-- Varningsruta för väntande resultat -->
+                    <div id="spd-wait-warning" class="text-yellow-400 text-[10px] font-bold text-center mb-2 bg-yellow-900/50 rounded py-1 border border-yellow-700 hidden"></div>
+                    
                     <div class="flex justify-between items-center border-b border-[#FFFF00] pb-1 mb-2">
                         <h4 id="spd-name" class="cm-text-yellow font-bold uppercase tracking-wider">Namn</h4>
                         <button onclick="closeStatsPlayerDetails()" class="text-gray-300 hover:text-white">&times;</button>
@@ -354,7 +356,7 @@
         </div>
     </div>
 
-    <!-- Admin Modal (Nu med garanterad marginal på mobil) -->
+    <!-- Admin Modal -->
     <div id="admin-modal" class="fixed inset-0 bg-black/95 hidden z-[60] flex items-center justify-center p-3 sm:p-6">
         <div class="bg-gray-800 w-[96%] sm:w-full max-w-5xl max-h-full rounded shadow-2xl flex flex-col border border-gray-600 relative overflow-hidden">
             
@@ -406,13 +408,14 @@
                         </button>
                     </div>
 
-                    <!-- Lag Vy -->
+                    <!-- Lag Vy (Nu med 'Väntar'-kolumn) -->
                     <div id="admin-view-lag" class="flex flex-col gap-2 max-w-3xl mx-auto w-full">
                         <div class="bg-gray-800 rounded border border-gray-700 overflow-hidden shadow overflow-x-auto">
                             <table class="w-full text-left text-xs whitespace-nowrap">
                                 <thead class="bg-gray-900 text-[10px] text-purple-400 uppercase font-bold border-b border-gray-700">
                                     <tr>
                                         <th class="p-2">Valda Lag</th>
+                                        <th class="p-2 text-center w-12" title="Markera om laget väntar på att spela">Väntar</th>
                                         <th class="p-2 text-center w-14" title="Ligapoäng">L.P</th>
                                         <th class="p-2 text-center w-14" title="Gjorda Mål">Gj.M</th>
                                         <th class="p-2 text-center w-14" title="Insläppta Mål">In.M</th>
@@ -515,7 +518,7 @@
         </div>
     </div>
 
-    <!-- Create Team Modal (Nu med garanterad marginal på mobil) -->
+    <!-- Create Team Modal -->
     <div id="create-modal" class="fixed inset-0 bg-black/95 hidden z-[60] flex items-center justify-center p-3 sm:p-6">
         <div class="bg-gray-800 w-[96%] sm:w-full max-w-3xl max-h-full rounded flex flex-col border border-gray-600 overflow-hidden shadow-2xl">
             <div class="p-2 border-b border-gray-700 flex justify-between items-center cm-bg-nav shrink-0 cm-font">
@@ -703,6 +706,11 @@
             return null;
         }
 
+        // Hittar den omgång som är öppen (och därmed aktiv) just nu
+        function getActiveRound() {
+            return ROUNDS.find(r => !roundLocks[r]);
+        }
+
         function updateCountdown() {
             const DEADLINE = new Date('2026-10-10T13:30:00+02:00').getTime();
             const now = new Date().getTime();
@@ -762,7 +770,7 @@
         // HÄR LÄSER VI IN FRÅN MOLNET
         function initializeData() {
             Object.keys(TEAMS).forEach(t => { 
-                if(!statsState.teams[t]) statsState.teams[t] = { r10: {lp:0, gf:0, ga:0, titles:0}, r20: {lp:0, gf:0, ga:0, titles:0}, r30: {lp:0, gf:0, ga:0, titles:0}, slut: {lp:0, gf:0, ga:0, titles:0} }; 
+                if(!statsState.teams[t]) statsState.teams[t] = { r10: {lp:0, gf:0, ga:0, titles:0, waiting:false}, r20: {lp:0, gf:0, ga:0, titles:0, waiting:false}, r30: {lp:0, gf:0, ga:0, titles:0, waiting:false}, slut: {lp:0, gf:0, ga:0, titles:0, waiting:false} }; 
             });
             Object.keys(PLAYERS).forEach(p => { 
                 if(!statsState.players[p]) statsState.players[p] = { r10: {goals:0, assists:0}, r20: {goals:0, assists:0}, r30: {goals:0, assists:0}, slut: {goals:0, assists:0} }; 
@@ -776,7 +784,7 @@
                     if (data.locks) roundLocks = data.locks;
                     if (data.compLocked !== undefined) adminCompLocked = data.compLocked;
 
-                    Object.keys(TEAMS).forEach(t => { if(!statsState.teams[t]) statsState.teams[t] = { r10: {lp:0, gf:0, ga:0, titles:0}, r20: {lp:0, gf:0, ga:0, titles:0}, r30: {lp:0, gf:0, ga:0, titles:0}, slut: {lp:0, gf:0, ga:0, titles:0} }; });
+                    Object.keys(TEAMS).forEach(t => { if(!statsState.teams[t]) statsState.teams[t] = { r10: {lp:0, gf:0, ga:0, titles:0, waiting:false}, r20: {lp:0, gf:0, ga:0, titles:0, waiting:false}, r30: {lp:0, gf:0, ga:0, titles:0, waiting:false}, slut: {lp:0, gf:0, ga:0, titles:0, waiting:false} }; });
                     Object.keys(PLAYERS).forEach(p => { if(!statsState.players[p]) statsState.players[p] = { r10: {goals:0, assists:0}, r20: {goals:0, assists:0}, r30: {goals:0, assists:0}, slut: {goals:0, assists:0} }; });
 
                     updateAdminLockBtn();
@@ -912,6 +920,7 @@
 
             document.getElementById('pitch-round-status').innerText = roundText;
             const latestRound = getLatestLockedRound();
+            const activeRound = getActiveRound();
 
             comp.squad.forEach(pid => {
                 const p = PLAYERS[pid];
@@ -927,6 +936,16 @@
                 const ptsGoals = roundDec(rawGoals * 2);
                 const ptsAssists = roundDec(rawAssists * 1);
                 
+                // KOLL OM LAGET VÄNTAR PÅ MATCH I AKTUELL OMGÅNG
+                const isWaiting = activeRound && statsState.teams[p.team] && statsState.teams[p.team][activeRound] && statsState.teams[p.team][activeRound].waiting;
+                const waitIcon = isWaiting ? ' ⏳' : '';
+                
+                let waitTextHtml = '';
+                if(isWaiting) {
+                    let rName = activeRound === 'slut' ? 'Slutställning' : activeRound.replace('r','omg ');
+                    waitTextHtml = `<div class="text-yellow-400 text-[9px] font-bold text-center mb-1 bg-yellow-900/50 rounded py-0.5 border border-yellow-700">⏳ Väntar på ${rName}</div>`;
+                }
+
                 const tooltipPosClass = (p.pos === 'FWD' || p.pos === 'MID') ? 'top-full mt-2' : 'bottom-full mb-2';
 
                 const div = document.createElement('div');
@@ -938,10 +957,11 @@
                         ${p.name}
                     </div>
                     <div class="bg-gray-800 text-green-400 text-[9px] sm:text-[10px] font-bold px-1 sm:px-2 py-0.5 rounded-b text-center whitespace-nowrap border border-gray-700 shadow-md leading-none z-10 w-full pointer-events-none">
-                        ${finalPts} p
+                        ${finalPts} p${waitIcon}
                     </div>
                     
                     <div class="player-tooltip absolute ${tooltipPosClass} bg-black/95 text-white text-[10px] sm:text-xs p-2 rounded shadow-2xl border border-gray-600 w-44 z-[100] hidden">
+                        ${waitTextHtml}
                         <div class="font-bold text-center border-b border-gray-600 pb-1 mb-1 text-blue-300">${p.name}</div>
                         <div class="flex justify-between items-center py-0.5"><span>Mål (${rawGoals} st):</span> <span class="text-green-400 font-mono">${ptsGoals}p</span></div>
                         <div class="flex justify-between items-center py-0.5"><span>Assist (${rawAssists} st):</span> <span class="text-green-400 font-mono">${ptsAssists}p</span></div>
@@ -1037,6 +1057,18 @@
             
             document.getElementById('spd-tot-pts').innerText = tPts + 'p';
 
+            // Visa varning i detaljrutan om laget väntar på spel
+            const activeRound = getActiveRound();
+            const isWaiting = activeRound && statsState.teams[tid] && statsState.teams[tid][activeRound] && statsState.teams[tid][activeRound].waiting;
+            const spdWait = document.getElementById('spd-wait-warning');
+            if(isWaiting) {
+                let rName = activeRound === 'slut' ? 'Slutställning' : activeRound.replace('r','omg ');
+                spdWait.innerHTML = `⏳ Väntar på ${rName}`;
+                spdWait.classList.remove('hidden');
+            } else {
+                spdWait.classList.add('hidden');
+            }
+
             popup.classList.remove('hidden');
             
             const scrollArea = document.getElementById('stats-scroll-area');
@@ -1053,6 +1085,7 @@
         function renderStats() {
             const { players, teams } = getActiveEntities();
             const latestRound = getLatestLockedRound();
+            const activeRound = getActiveRound();
             
             const myTeams = JSON.parse(localStorage.getItem('ff_my_teams') || '[]');
             let myPlayerIds = new Set();
@@ -1065,7 +1098,8 @@
                     tA = statsState.players[p.id][latestRound].assists;
                     tPts = calcIndPts(p.id, latestRound) + calcTeamPts(p.team, latestRound, p.pos);
                 }
-                return { ...p, tG, tA, tPts: roundDec(tPts) };
+                const isWaiting = activeRound && statsState.teams[p.team] && statsState.teams[p.team][activeRound] && statsState.teams[p.team][activeRound].waiting;
+                return { ...p, tG, tA, tPts: roundDec(tPts), isWaiting };
             });
             pData.sort((a, b) => b.tPts - a.tPts);
             
@@ -1074,6 +1108,7 @@
             pData.forEach(p => {
                 const isMyPlayer = myPlayerIds.has(p.id);
                 const tr = document.createElement('tr');
+                const waitIcon = p.isWaiting ? ' <span title="Väntar på match">⏳</span>' : '';
                 
                 tr.className = `cursor-pointer stats-player-row transition ${isMyPlayer ? 'bg-[#000050] border-l-4 border-[#FFFF00]' : 'hover:bg-gray-700/50'}`;
                 tr.onclick = (e) => openStatsPlayerDetails(e, p.id, p.name, p.pos, p.team, p.tG, p.tA, p.tPts);
@@ -1081,7 +1116,7 @@
                     <td class="p-1.5 font-bold ${isMyPlayer ? 'text-[#FFFF00]' : ''}">${p.name}</td>
                     <td class="p-1.5 text-gray-400">${p.pos}</td>
                     <td class="p-1.5 text-gray-400 flex items-center gap-1.5">${getJerseySvg(p.team, "w-4 h-4 shrink-0")} <span class="truncate">${TEAMS[p.team].name}</span></td>
-                    <td class="p-1.5 text-center text-green-400 font-bold">${p.tPts}</td>
+                    <td class="p-1.5 text-center text-green-400 font-bold">${p.tPts}${waitIcon}</td>
                 `;
                 tbodyP.appendChild(tr);
             });
@@ -1092,19 +1127,22 @@
                     tGf = statsState.teams[t.id][latestRound].gf; tGa = statsState.teams[t.id][latestRound].ga;
                     tLp = statsState.teams[t.id][latestRound].lp; tTit = statsState.teams[t.id][latestRound].titles;
                 }
-                return { ...t, tGf, tGa, tLp, tTit };
+                const isWaiting = activeRound && statsState.teams[t.id] && statsState.teams[t.id][activeRound] && statsState.teams[t.id][activeRound].waiting;
+                return { ...t, tGf, tGa, tLp, tTit, isWaiting };
             });
             tData.sort((a, b) => b.tLp - a.tLp);
 
-            document.getElementById('stats-teams-tbody').innerHTML = tData.map(t => `
+            document.getElementById('stats-teams-tbody').innerHTML = tData.map(t => {
+                const waitIcon = t.isWaiting ? ' <span title="Väntar på match">⏳</span>' : '';
+                return `
                 <tr class="hover:bg-gray-700/50">
-                    <td class="p-1.5 font-bold flex items-center gap-2">${getJerseySvg(t.id, "w-5 h-5 sm:w-6 sm:h-6 shrink-0")} ${t.name}</td>
+                    <td class="p-1.5 font-bold flex items-center gap-2">${getJerseySvg(t.id, "w-5 h-5 sm:w-6 sm:h-6 shrink-0")} <span class="truncate">${t.name}${waitIcon}</span></td>
                     <td class="p-1.5 text-center">${t.tGf}</td>
                     <td class="p-1.5 text-center">${t.tGa}</td>
                     <td class="p-1.5 text-center">${t.tLp}</td>
                     <td class="p-1.5 text-center text-yellow-400">${t.tTit}</td>
                 </tr>
-            `).join('');
+            `}).join('');
         }
 
         function editTeam(teamId) {
@@ -1417,7 +1455,7 @@
             // LAG
             const tBody = document.getElementById('admin-teams-tbody');
             tBody.innerHTML = '';
-            if (teams.length === 0) tBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Inga lag valda.</td></tr>';
+            if (teams.length === 0) tBody.innerHTML = '<tr><td colspan="6" class="p-4 text-center">Inga lag valda.</td></tr>';
             
             teams.sort((a,b) => a.name.localeCompare(b.name)).forEach(t => {
                 const s = statsState.teams[t.id][currentAdminRoundId];
@@ -1427,6 +1465,7 @@
                             ${getJerseySvg(t.id, "w-5 h-5 sm:w-6 sm:h-6 shrink-0")} 
                             <span class="font-bold truncate text-[10px] sm:text-xs w-16 sm:w-24">${t.name}</span>
                         </td>
+                        <td class="p-1 text-center w-12 sm:w-14"><input type="checkbox" id="adm_t_${t.id}_wait" ${s.waiting ? 'checked' : ''} class="w-4 h-4 cursor-pointer" ${isLocked?'disabled':''}></td>
                         <td class="p-1 text-center w-12 sm:w-14"><input type="number" id="adm_t_${t.id}_lp" value="${s.lp}" class="w-full bg-gray-900 border border-gray-600 rounded p-1 text-center text-xs text-white focus:border-blue-500" ${isLocked?'disabled':''}></td>
                         <td class="p-1 text-center w-12 sm:w-14"><input type="number" id="adm_t_${t.id}_gf" value="${s.gf}" class="w-full bg-gray-900 border border-gray-600 rounded p-1 text-center text-xs text-white focus:border-blue-500" ${isLocked?'disabled':''}></td>
                         <td class="p-1 text-center w-12 sm:w-14"><input type="number" id="adm_t_${t.id}_ga" value="${s.ga}" class="w-full bg-gray-900 border border-gray-600 rounded p-1 text-center text-xs text-white focus:border-blue-500" ${isLocked?'disabled':''}></td>
@@ -1476,11 +1515,12 @@
             if(roundLocks[rId]) return; 
             const { players, teams } = getActiveEntities();
             teams.forEach(t => {
-                const lp=document.getElementById(`adm_t_${t.id}_lp`), gf=document.getElementById(`adm_t_${t.id}_gf`), ga=document.getElementById(`adm_t_${t.id}_ga`), ti=document.getElementById(`adm_t_${t.id}_ti`);
+                const lp=document.getElementById(`adm_t_${t.id}_lp`), gf=document.getElementById(`adm_t_${t.id}_gf`), ga=document.getElementById(`adm_t_${t.id}_ga`), ti=document.getElementById(`adm_t_${t.id}_ti`), wait=document.getElementById(`adm_t_${t.id}_wait`);
                 if(lp) statsState.teams[t.id][rId].lp = parseFloat(lp.value)||0;
                 if(gf) statsState.teams[t.id][rId].gf = parseFloat(gf.value)||0;
                 if(ga) statsState.teams[t.id][rId].ga = parseFloat(ga.value)||0;
                 if(ti) statsState.teams[t.id][rId].titles = parseFloat(ti.value)||0;
+                if(wait) statsState.teams[t.id][rId].waiting = wait.checked;
             });
             players.forEach(p => {
                 const g=document.getElementById(`adm_p_${p.id}_g`), a=document.getElementById(`adm_p_${p.id}_a`);
@@ -1525,7 +1565,7 @@
         function resetRound() {
             if(roundLocks[currentAdminRoundId]) return showMsg(`Omgången är låst! Lås upp den först.`);
             const { players, teams } = getActiveEntities();
-            teams.forEach(t => { statsState.teams[t.id][currentAdminRoundId] = {lp:0, gf:0, ga:0, titles:0}; });
+            teams.forEach(t => { statsState.teams[t.id][currentAdminRoundId] = {lp:0, gf:0, ga:0, titles:0, waiting:false}; });
             players.forEach(p => { statsState.players[p.id][currentAdminRoundId] = {goals:0, assists:0}; });
             saveToCloud();
             showMsg(`Återställde poäng för ${currentAdminRoundId === 'slut' ? 'Slutställning' : currentAdminRoundId.replace('r','Omgång ')}.`);
