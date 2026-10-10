@@ -132,15 +132,17 @@
                 <h2 class="text-sm font-bold cm-text-yellow uppercase tracking-wider">Poängställning</h2>
             </div>
             
-            <div class="flex-1 overflow-x-auto overflow-y-auto">
+            <div class="flex-1 overflow-x-auto overflow-y-auto hide-scrollbar">
                 <table class="w-full text-left whitespace-nowrap text-[10px] sm:text-sm font-sans">
                     <thead>
                         <tr class="text-gray-400 border-b border-gray-700 uppercase bg-gray-900/50 sticky top-0 z-10">
-                            <th class="p-2 font-semibold">Deltagare</th>
-                            <th class="p-1 sm:p-2 font-semibold text-center">R10</th>
-                            <th class="p-1 sm:p-2 font-semibold text-center">R20</th>
-                            <th class="p-1 sm:p-2 font-semibold text-center">R30</th>
-                            <th class="p-1 sm:p-2 font-semibold text-center">Slut</th>
+                            <th class="p-1 sm:p-2 font-semibold">Deltagare</th>
+                            <th class="p-1 sm:p-1.5 font-semibold text-center">R10</th>
+                            <th class="p-1 sm:p-1.5 font-semibold text-center">R15</th>
+                            <th class="p-1 sm:p-1.5 font-semibold text-center">R20</th>
+                            <th class="p-1 sm:p-1.5 font-semibold text-center">R25</th>
+                            <th class="p-1 sm:p-1.5 font-semibold text-center">R30</th>
+                            <th class="p-1 sm:p-1.5 font-semibold text-center">Slut</th>
                             <th class="p-1 sm:p-2 font-bold text-center text-green-400">Totalt</th>
                         </tr>
                     </thead>
@@ -163,6 +165,7 @@
                 </div>
             </div>
 
+            <!-- Scrollbar planvy: Tillåter vertikal scroll (overflow-y-auto) på mobiler om planen blir för hög -->
             <div class="flex-1 overflow-y-auto p-2 pt-14 pb-4 sm:p-4 sm:pt-16 flex justify-center items-start sm:items-center min-h-0 font-sans relative box-border">
                 <div class="pitch-bg w-full max-w-[280px] sm:max-w-md min-h-[460px] sm:min-h-[500px] h-full sm:h-[95%] max-h-none sm:max-h-full rounded shadow-inner flex flex-col justify-between py-4 sm:py-6 px-1 shrink-0">
                     <div class="pitch-lines">
@@ -256,7 +259,7 @@
             </div>
             <div class="p-4 space-y-4 text-gray-300 text-sm overflow-y-auto flex-1">
                 <p><strong>Vad du ska göra:</strong> Ta ut ditt lag utifrån två taktiska varianter (4-3-3 eller 3-4-3) senast kl 13:30 den 10 oktober.</p>
-                <p><strong>Samla poäng:</strong> Utifrån poängsystemet. Alla poäng räknas samman vid fyra specifika tillfällen per säsong (Omg 10, 20, 30 och Slutställning). Märk väl att Insläppta mål räknas ”baklänges”.</p>
+                <p><strong>Samla poäng:</strong> Utifrån poängsystemet. Alla poäng räknas samman vid sex specifika tillfällen per säsong (Omg 10, 15, 20, 25, 30 och Slutställning). Märk väl att Insläppta mål räknas ”baklänges”.</p>
                 <p>Luta dig tillbaka och följ dina spelares utveckling. I den här tävlingen gör vi inga byten under säsongen.</p>
                 <p class="text-yellow-400 font-bold border-l-4 border-yellow-400 pl-2">Viktig regel: Allt baseras ENBART på den egna inhemska ligan (mål, titlar osv.) och oavsett om just din spelare spelar eller inte.</p>
                 <div>
@@ -269,7 +272,7 @@
                     </ul>
                 </div>
                 <p class="text-[11px] text-gray-400 mt-2 border-t border-gray-700 pt-3 leading-relaxed">
-                    <strong>OBS:</strong> skapa ditt lag på den enhet (mobil, iPad, dator) som du vill utgå ifrån. Ditt lag sparas på den enheten. Från och med 10 oktober kan du dock följa och se samtliga lag och spelare från vilken enhet du vill.
+                    <strong>OBS:</strong> skapa ditt lag på den enhet (mobil, iPad, dator) och i den webbläsare som du vill utgå ifrån. Ditt lag sparas i den webbläsaren. Från och med 10 oktober kan du dock följa och se samtliga lag och spelare från vilken enhet du vill.
                 </p>
             </div>
             <div class="p-2 border-t border-gray-700 flex justify-end shrink-0 cm-bg-nav cm-font">
@@ -383,7 +386,9 @@
                 <div class="bg-gray-800 p-2 border-b border-gray-700 shrink-0 flex items-center justify-between overflow-x-auto hide-scrollbar">
                     <div class="flex gap-1 bg-gray-900 rounded p-1 border border-gray-700 shrink-0">
                         <button id="tab-r10" onclick="switchAdminRoundTab('r10')" class="px-3 py-1 text-xs font-bold rounded bg-blue-600 text-white shadow">Omgång 10</button>
+                        <button id="tab-r15" onclick="switchAdminRoundTab('r15')" class="px-3 py-1 text-xs font-bold rounded text-gray-400 hover:bg-gray-700">Omgång 15</button>
                         <button id="tab-r20" onclick="switchAdminRoundTab('r20')" class="px-3 py-1 text-xs font-bold rounded text-gray-400 hover:bg-gray-700">Omgång 20</button>
+                        <button id="tab-r25" onclick="switchAdminRoundTab('r25')" class="px-3 py-1 text-xs font-bold rounded text-gray-400 hover:bg-gray-700">Omgång 25</button>
                         <button id="tab-r30" onclick="switchAdminRoundTab('r30')" class="px-3 py-1 text-xs font-bold rounded text-gray-400 hover:bg-gray-700">Omgång 30</button>
                         <button id="tab-slut" onclick="switchAdminRoundTab('slut')" class="px-3 py-1 text-xs font-bold rounded text-gray-400 hover:bg-gray-700">Slutställning</button>
                     </div>
@@ -408,7 +413,7 @@
                         </button>
                     </div>
 
-                    <!-- Lag Vy (Nu med 'Väntar'-kolumn) -->
+                    <!-- Lag Vy -->
                     <div id="admin-view-lag" class="flex flex-col gap-2 max-w-3xl mx-auto w-full">
                         <div class="bg-gray-800 rounded border border-gray-700 overflow-hidden shadow overflow-x-auto">
                             <table class="w-full text-left text-xs whitespace-nowrap">
@@ -518,7 +523,7 @@
         </div>
     </div>
 
-    <!-- Create Team Modal -->
+    <!-- Create Team Modal (Nu med garanterad marginal på mobil) -->
     <div id="create-modal" class="fixed inset-0 bg-black/95 hidden z-[60] flex items-center justify-center p-3 sm:p-6">
         <div class="bg-gray-800 w-[96%] sm:w-full max-w-3xl max-h-full rounded flex flex-col border border-gray-600 overflow-hidden shadow-2xl">
             <div class="p-2 border-b border-gray-700 flex justify-between items-center cm-bg-nav shrink-0 cm-font">
@@ -683,11 +688,11 @@
             'p_y9': { name: 'Kane', team: 'BAY', pos: 'FWD' }, 'p_y10': { name: 'Diaz', team: 'BAY', pos: 'FWD' }
         };
 
-        const ROUNDS = ['r10', 'r20', 'r30', 'slut'];
+        const ROUNDS = ['r10', 'r15', 'r20', 'r25', 'r30', 'slut'];
         
         let COMPETITORS = [];
         let statsState = { teams: {}, players: {} };
-        let roundLocks = { r10: false, r20: false, r30: false, slut: false };
+        let roundLocks = { r10: false, r15: false, r20: false, r25: false, r30: false, slut: false };
         let adminCompLocked = false;
         
         let currentSelectedTeam = null;
@@ -701,7 +706,9 @@
         function getLatestLockedRound() {
             if (roundLocks.slut) return 'slut';
             if (roundLocks.r30) return 'r30';
+            if (roundLocks.r25) return 'r25';
             if (roundLocks.r20) return 'r20';
+            if (roundLocks.r15) return 'r15';
             if (roundLocks.r10) return 'r10';
             return null;
         }
@@ -734,6 +741,7 @@
                 timerEl.className = "text-[10px] sm:text-xs text-yellow-400 font-mono bg-black/50 px-2 py-0.5 rounded border border-gray-600 shadow-inner";
                 timerEl.classList.remove('hidden');
                 
+                // Döljer knappen Skapa Lag om man redan har skapat ett lag på denna enhet
                 if(btnCreate) {
                     if (myTeams.length > 0) {
                         btnCreate.classList.add('hidden');
@@ -769,11 +777,14 @@
 
         // HÄR LÄSER VI IN FRÅN MOLNET
         function initializeData() {
+            // Förbered tomma objekt för att slippa fel innan databasen har laddat
             Object.keys(TEAMS).forEach(t => { 
-                if(!statsState.teams[t]) statsState.teams[t] = { r10: {lp:0, gf:0, ga:0, titles:0, waiting:false}, r20: {lp:0, gf:0, ga:0, titles:0, waiting:false}, r30: {lp:0, gf:0, ga:0, titles:0, waiting:false}, slut: {lp:0, gf:0, ga:0, titles:0, waiting:false} }; 
+                if(!statsState.teams[t]) statsState.teams[t] = {};
+                ROUNDS.forEach(r => { if(!statsState.teams[t][r]) statsState.teams[t][r] = {lp:0, gf:0, ga:0, titles:0, waiting:false}; });
             });
             Object.keys(PLAYERS).forEach(p => { 
-                if(!statsState.players[p]) statsState.players[p] = { r10: {goals:0, assists:0}, r20: {goals:0, assists:0}, r30: {goals:0, assists:0}, slut: {goals:0, assists:0} }; 
+                if(!statsState.players[p]) statsState.players[p] = {};
+                ROUNDS.forEach(r => { if(!statsState.players[p][r]) statsState.players[p][r] = {goals:0, assists:0}; });
             });
 
             db.collection("superelvan").doc("globalState").onSnapshot(doc => {
@@ -784,8 +795,18 @@
                     if (data.locks) roundLocks = data.locks;
                     if (data.compLocked !== undefined) adminCompLocked = data.compLocked;
 
-                    Object.keys(TEAMS).forEach(t => { if(!statsState.teams[t]) statsState.teams[t] = { r10: {lp:0, gf:0, ga:0, titles:0, waiting:false}, r20: {lp:0, gf:0, ga:0, titles:0, waiting:false}, r30: {lp:0, gf:0, ga:0, titles:0, waiting:false}, slut: {lp:0, gf:0, ga:0, titles:0, waiting:false} }; });
-                    Object.keys(PLAYERS).forEach(p => { if(!statsState.players[p]) statsState.players[p] = { r10: {goals:0, assists:0}, r20: {goals:0, assists:0}, r30: {goals:0, assists:0}, slut: {goals:0, assists:0} }; });
+                    // FIX: Lägger till de nya omgångarna i gammal databas-struktur
+                    if (roundLocks.r15 === undefined) roundLocks.r15 = false;
+                    if (roundLocks.r25 === undefined) roundLocks.r25 = false;
+
+                    Object.keys(TEAMS).forEach(t => { 
+                        if(!statsState.teams[t]) statsState.teams[t] = {};
+                        ROUNDS.forEach(r => { if(!statsState.teams[t][r]) statsState.teams[t][r] = {lp:0, gf:0, ga:0, titles:0, waiting:false}; });
+                    });
+                    Object.keys(PLAYERS).forEach(p => { 
+                        if(!statsState.players[p]) statsState.players[p] = {};
+                        ROUNDS.forEach(r => { if(!statsState.players[p][r]) statsState.players[p][r] = {goals:0, assists:0}; });
+                    });
 
                     updateAdminLockBtn();
                     updateCountdown();
@@ -829,7 +850,7 @@
         };
 
         function getCompScores(comp) {
-            let scores = { r10: 0, r20: 0, r30: 0, slut: 0, total: 0 };
+            let scores = { r10: 0, r15: 0, r20: 0, r25: 0, r30: 0, slut: 0, total: 0 };
             const latestRound = getLatestLockedRound();
             
             comp.squad.forEach(pid => { 
@@ -841,6 +862,8 @@
                 }); 
             });
             ROUNDS.forEach(r => scores[r] = roundDec(scores[r]));
+            // Poängen ackumuleras per omgång baserat på den totala tabellställningen du knappar in
+            // "Totalen" hämtas därefter bara som en snapshot från den senast låsta omgången
             scores.total = latestRound ? scores[latestRound] : 0;
             return scores;
         }
@@ -848,7 +871,7 @@
         function renderLeaderboard() {
             const tbody = document.getElementById('leaderboard-body');
             tbody.innerHTML = '';
-            if (COMPETITORS.length === 0) return tbody.innerHTML = `<tr><td colspan="6" class="text-center p-4 text-gray-500">Inga lag skapade ännu.</td></tr>`;
+            if (COMPETITORS.length === 0) return tbody.innerHTML = `<tr><td colspan="8" class="text-center p-4 text-gray-500">Inga lag skapade ännu.</td></tr>`;
 
             const sorted = [...COMPETITORS].sort((a, b) => getCompScores(b).total - getCompScores(a).total);
             if(!currentSelectedTeam && sorted.length > 0) currentSelectedTeam = sorted[0].id;
@@ -870,10 +893,12 @@
                         ${getStaticShirtSvg("w-4 h-4 sm:w-5 sm:h-5 shrink-0")} 
                         <span class="${isMyTeam ? 'text-[#FFFF00]' : ''} truncate">${comp.name}</span>
                     </td>
-                    <td class="p-1 sm:p-2 text-center text-gray-400 font-mono">${s.r10}</td>
-                    <td class="p-1 sm:p-2 text-center text-gray-400 font-mono">${s.r20}</td>
-                    <td class="p-1 sm:p-2 text-center text-gray-400 font-mono">${s.r30}</td>
-                    <td class="p-1 sm:p-2 text-center text-gray-400 font-mono">${s.slut}</td>
+                    <td class="p-1 sm:p-1.5 text-center text-gray-400 font-mono">${s.r10}</td>
+                    <td class="p-1 sm:p-1.5 text-center text-gray-400 font-mono">${s.r15}</td>
+                    <td class="p-1 sm:p-1.5 text-center text-gray-400 font-mono">${s.r20}</td>
+                    <td class="p-1 sm:p-1.5 text-center text-gray-400 font-mono">${s.r25}</td>
+                    <td class="p-1 sm:p-1.5 text-center text-gray-400 font-mono">${s.r30}</td>
+                    <td class="p-1 sm:p-1.5 text-center text-gray-400 font-mono">${s.slut}</td>
                     <td class="p-1 sm:p-2 text-center text-green-400 font-bold font-mono bg-gray-900/40">${s.total}</td>
                 `;
                 tbody.appendChild(tr);
@@ -889,7 +914,9 @@
             let roundText = "Inför Omgång 10";
             if (lockedRounds.includes('slut')) roundText = "Slutställning";
             else if (lockedRounds.includes('r30')) roundText = "Efter Omgång 30";
+            else if (lockedRounds.includes('r25')) roundText = "Efter Omgång 25";
             else if (lockedRounds.includes('r20')) roundText = "Efter Omgång 20";
+            else if (lockedRounds.includes('r15')) roundText = "Efter Omgång 15";
             else if (lockedRounds.includes('r10')) roundText = "Efter Omgång 10";
             
             if(!comp) {
@@ -1343,7 +1370,9 @@
 
         function openAdmin() {
             if(!roundLocks.r10) currentAdminRoundId = 'r10';
+            else if(!roundLocks.r15) currentAdminRoundId = 'r15';
             else if(!roundLocks.r20) currentAdminRoundId = 'r20';
+            else if(!roundLocks.r25) currentAdminRoundId = 'r25';
             else if(!roundLocks.r30) currentAdminRoundId = 'r30';
             else currentAdminRoundId = 'slut';
             
@@ -1398,8 +1427,10 @@
             saveToCloud();
             
             if (roundLocks[currentAdminRoundId]) {
-                if(currentAdminRoundId === 'r10' && !roundLocks.r20) currentAdminRoundId = 'r20';
-                else if(currentAdminRoundId === 'r20' && !roundLocks.r30) currentAdminRoundId = 'r30';
+                if(currentAdminRoundId === 'r10' && !roundLocks.r15) currentAdminRoundId = 'r15';
+                else if(currentAdminRoundId === 'r15' && !roundLocks.r20) currentAdminRoundId = 'r20';
+                else if(currentAdminRoundId === 'r20' && !roundLocks.r25) currentAdminRoundId = 'r25';
+                else if(currentAdminRoundId === 'r25' && !roundLocks.r30) currentAdminRoundId = 'r30';
                 else if(currentAdminRoundId === 'r30' && !roundLocks.slut) currentAdminRoundId = 'slut';
             }
             buildAdminUI();
